@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicles - Project Title</title>
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .vehicle-card img { height: 200px; object-fit: cover; }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Project Title</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="mybookings.html">My Bookings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="login.html">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+        <h2 class="mb-4 text-center">Available Vehicles</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card vehicle-card">
+                    <img src="https://source.unsplash.com/400x300/?toyota,fortuner" class="card-img-top" alt="Toyota Fortuner">
+                    <div class="card-body">
+                        <h5 class="card-title">Toyota Fortuner</h5>
+                        <p class="card-text">₹1900/day</p>
+                        <a href="booking.html?car=Toyota%20Fortuner" class="btn btn-primary w-100">Rent Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card vehicle-card">
+                    <img src="https://source.unsplash.com/400x300/?bmw,x5" class="card-img-top" alt="BMW X5">
+                    <div class="card-body">
+                        <h5 class="card-title">BMW X5</h5>
+                        <p class="card-text">₹3200/day</p>
+                        <a href="booking.html?car=BMW%20X5" class="btn btn-primary w-100">Rent Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card vehicle-card">
+                    <img src="https://source.unsplash.com/400x300/?audi,q7" class="card-img-top" alt="Audi Q7">
+                    <div class="card-body">
+                        <h5 class="card-title">Audi Q7</h5>
+                        <p class="card-text">₹2800/day</p>
+                        <a href="booking.html?car=Audi%20Q7" class="btn btn-primary w-100">Rent Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white py-3 mt-auto">
+        <div class="container text-center">
+            &copy; 2026 Project Title
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

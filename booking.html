@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking - Project Title</title>
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .form-container { max-width: 500px; margin: 3rem auto; }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Project Title</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navBooking">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navBooking">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="vehicles.html">Vehicles</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main class="flex-grow-1">
+        <div class="form-container">
+            <h2 class="mb-4 text-center">Confirm Booking</h2>
+            <form id="bookingForm">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="vehicleName" class="form-label">Vehicle Name</label>
+                    <input type="text" class="form-control" id="vehicleName" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="date" required>
+                </div>
+                <div class="mb-3">
+                    <label for="pickup" class="form-label">Pickup Time</label>
+                    <input type="time" class="form-control" id="pickup" required>
+                </div>
+                <div class="mb-3">
+                    <label for="drop" class="form-label">Drop Time</label>
+                    <input type="time" class="form-control" id="drop" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Confirm Booking</button>
+            </form>
+        </div>
+    </main>
+    <footer class="bg-dark text-white py-3 mt-auto">
+        <div class="container text-center">
+            &copy; 2026 Project Title
+        </div>
+    </footer>
+    <script>
+        // parse query string for vehicle name
+        const params = new URLSearchParams(window.location.search);
+        const car = params.get('car') || '';
+        document.getElementById('vehicleName').value = car;
+        // placeholder username
+        document.getElementById('username').value = 'User';
+        document.getElementById('bookingForm').addEventListener('submit', function(e){
+            e.preventDefault();
+            alert('Booking confirmed!');
+            window.location.href = 'mybookings.html';
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

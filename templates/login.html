@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+{% block title %}Login — VehicleHub{% endblock %}
+
+{% block head %}
+<style>
+    body {
+        background: var(--grad-hero);
+    }
+
+    .auth-page {
+        min-height: calc(100vh - 68px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-page::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse 60% 70% at 70% 50%, rgba(14, 165, 233, 0.10), transparent),
+            radial-gradient(ellipse 40% 40% at 20% 80%, rgba(6, 182, 212, 0.06), transparent);
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 440px;
+        background: rgba(17, 24, 39, 0.9);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-2xl);
+        padding: 44px;
+        backdrop-filter: blur(20px);
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    }
+
+    .auth-logo {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 28px;
+    }
+
+    .auth-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: white;
+        text-align: center;
+        letter-spacing: -0.5px;
+        margin-bottom: 6px;
+    }
+
+    .auth-sub {
+        font-size: 14px;
+        color: var(--text-secondary);
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    /* Step indicator */
+    .steps-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 32px;
+    }
+
+    .step-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        transition: all 0.3s;
+        background: rgba(14, 165, 233, 0.2);
+        border: 2px solid var(--border);
+    }
+
+    .step-dot.active {
+        background: var(--sky-500);
+        border-color: var(--sky-500);
+        box-shadow: 0 0 8px rgba(14, 165, 233, 0.5);
+    }
+
+    .step-line {
+        width: 40px;
+        height: 2px;
+        background: var(--border);
+        border-radius: 2px;
+        transition: all 0.3s;
+    }
+
+    .step-line.done {
+        background: var(--sky-500);
+    }
+
+    /* Form groups */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    /* OTP inputs */
+    .otp-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 24px;
+    }
+
+    .otp-box {
+        width: 50px;
+        height: 58px;
+        border-radius: 12px;
+        text-align: center;
+        background: rgba(14, 165, 233, 0.06);
+        border: 1.5px solid var(--border);
+        color: white;
+        font-size: 22px;
+        font-weight: 700;
+        outline: none;
+        transition: all var(--trans-fast);
+    }
+
+    .otp-box:focus {
+        border-color: var(--sky-500);
+        background: rgba(14, 165, 233, 0.12);
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    }
+
+    /* Timer */
+    .otp-timer {
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+    }
+
+    .otp-timer span {
+        color: var(--sky-400);
+        font-weight: 600;
+    }
+
+    /* Sent info */
+    .sent-to-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: rgba(14, 165, 233, 0.07);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        margin-bottom: 24px;
+    }
+
+    .sent-to-box i {
+        color: var(--sky-400);
+    }
+
+    .sent-to-box span {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .sent-to-box strong {
+        color: var(--text-primary);
+    }
+
+    .btn-full {
+        width: 100%;
+        padding: 13px;
+        font-size: 15px;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+
+    .auth-footer a {
+        color: var(--sky-400);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .error-msg {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        color: #f87171;
+        margin-bottom: 16px;
+        animation: fadeUp 0.3s ease;
+    }
+
+    .error-msg i {
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <a href="{{ url_for('index') }}" class="vh-logo">
+                <div class="vh-logo-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"
+                            fill="white" />
+                    </svg>
+                </div>
+                <span class="vh-logo-text">Vehicle<span>Hub</span></span>
+            </a>
+        </div>
+
+        <!-- Step indicator -->
+        <div class="steps-row">
+            <div class="step-dot active" id="stepDot1"></div>
+            <div class="step-line" id="stepLine"></div>
+            <div class="step-dot" id="stepDot2"></div>
+        </div>
+
+        <!-- Step 1: Email/Phone -->
+        <div id="step1">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-sub">Enter your email to receive a secure OTP</p>
+
+            <div id="step1Error" style="display:none;"></div>
+
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="identifier" class="form-input" placeholder="you@example.com"
+                    autocomplete="email" required>
+            </div>
+
+            <button class="btn-primary btn-full" id="sendOtpBtn" onclick="loginApp.sendOtp()">
+                <i class="fas fa-paper-plane"></i> Send OTP
+            </button>
+
+            <div class="auth-footer">
+                New user? <a href="{{ url_for('auth.register') }}">Create account</a>
+            </div>
+        </div>
+
+        <!-- Step 2: OTP -->
+        <div id="step2" style="display:none;">
+            <h1 class="auth-title">Check Your Email</h1>
+            <p class="auth-sub">We sent a 6-digit code</p>
+
+            <div class="sent-to-box">
+                <i class="fas fa-envelope-open-text"></i>
+                <span>Code sent to <strong id="sentToDisplay"></strong></span>
+            </div>
+
+            <div id="step2Error" style="display:none;"></div>
+
+            <div class="otp-row" id="otpRow">
+                <input class="otp-box" type="text" maxlength="1" id="otp0" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="otp1" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="otp2" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="otp3" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="otp4" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="otp5" inputmode="numeric">
+            </div>
+
+            <div class="otp-timer">Code expires in <span id="timerDisplay">5:00</span></div>
+
+            <button class="btn-primary btn-full" id="verifyBtn" onclick="loginApp.verifyOtp()">
+                <i class="fas fa-unlock-alt"></i> Verify & Login
+            </button>
+
+            <div class="auth-footer" style="margin-top:14px;">
+                <a href="#" onclick="loginApp.goBack()">← Change email</a>
+                &nbsp;·&nbsp;
+                <a href="#" id="resendLink" onclick="loginApp.resend()" style="display:none;">Resend OTP</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const loginApp = {
+        identifier: '',
+        timer: null,
+        secondsLeft: 300,
+
+        async sendOtp() {
+            const id = document.getElementById('identifier').value.trim();
+            if (!id) { this.showError('step1Error', 'Please enter your email address'); return; }
+            this.identifier = id;
+
+            const btn = document.getElementById('sendOtpBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+            try {
+                const r = await fetch('/api/auth/send-otp', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: id })
+                });
+                const data = await r.json();
+                if (r.ok) {
+                    this.showStep2();
+                    showToast('OTP sent to your email', 'success');
+                } else {
+                    this.showError('step1Error', data.message || 'Failed to send OTP');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send OTP';
+                }
+            } catch (e) {
+                this.showError('step1Error', 'Network error. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send OTP';
+            }
+        },
+
+        showStep2() {
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+            document.getElementById('stepDot2').classList.add('active');
+            document.getElementById('stepLine').classList.add('done');
+            document.getElementById('sentToDisplay').textContent = this.maskEmail(this.identifier);
+            document.getElementById('otp0').focus();
+            this.setupOtpInputs();
+            this.startTimer();
+        },
+
+        goBack() {
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('stepDot2').classList.remove('active');
+            document.getElementById('stepLine').classList.remove('done');
+            clearInterval(this.timer);
+            const btn = document.getElementById('sendOtpBtn');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send OTP';
+        },
+
+        setupOtpInputs() {
+            const boxes = document.querySelectorAll('.otp-box');
+            boxes.forEach((box, i) => {
+                box.value = '';
+                box.addEventListener('input', (e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    e.target.value = val.slice(-1);
+                    if (val && i < 5) boxes[i + 1].focus();
+                    // Auto-verify when all filled
+                    const all = [...boxes].map(b => b.value).join('');
+                    if (all.length === 6) this.verifyOtp();
+                });
+                box.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+                });
+                box.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+                    [...boxes].forEach((b, j) => b.value = text[j] || '');
+                    if (text.length === 6) this.verifyOtp();
+                });
+            });
+        },
+
+        async verifyOtp() {
+            const otp = [...document.querySelectorAll('.otp-box')].map(b => b.value).join('');
+            if (otp.length < 6) { this.showError('step2Error', 'Please enter all 6 digits'); return; }
+
+            const btn = document.getElementById('verifyBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+            try {
+                const r = await fetch('/api/auth/verify-otp', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: this.identifier, otp })
+                });
+                const data = await r.json();
+                if (r.ok) {
+                    if (data.token) localStorage.setItem('auth_token', data.token);
+                    showToast('Login successful! Redirecting...', 'success');
+                    clearInterval(this.timer);
+                    const next = new URLSearchParams(window.location.search).get('next') || '/dashboard';
+                    setTimeout(() => window.location.href = next, 1200);
+                } else {
+                    this.showError('step2Error', data.message || 'Invalid OTP');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-unlock-alt"></i> Verify & Login';
+                }
+            } catch (e) {
+                this.showError('step2Error', 'Network error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-unlock-alt"></i> Verify & Login';
+            }
+        },
+
+        async resend() {
+            document.querySelectorAll('.otp-box').forEach(b => b.value = '');
+            document.getElementById('resendLink').style.display = 'none';
+            await this.sendOtp();
+            this.startTimer();
+        },
+
+        startTimer() {
+            this.secondsLeft = 300;
+            clearInterval(this.timer);
+            this.updateTimerDisplay();
+            this.timer = setInterval(() => {
+                this.secondsLeft--;
+                this.updateTimerDisplay();
+                if (this.secondsLeft <= 0) {
+                    clearInterval(this.timer);
+                    document.getElementById('timerDisplay').textContent = 'Expired';
+                    document.getElementById('resendLink').style.display = 'inline';
+                }
+            }, 1000);
+        },
+
+        updateTimerDisplay() {
+            const m = Math.floor(this.secondsLeft / 60);
+            const s = this.secondsLeft % 60;
+            document.getElementById('timerDisplay').textContent = `${m}:${String(s).padStart(2, '0')}`;
+        },
+
+        maskEmail(email) {
+            const [user, domain] = email.split('@');
+            return user.slice(0, 2) + '***@' + domain;
+        },
+
+        showError(id, msg) {
+            const el = document.getElementById(id);
+            el.style.display = 'flex';
+            el.className = 'error-msg';
+            el.innerHTML = `<i class="fas fa-exclamation-circle"></i>${msg}`;
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('identifier').addEventListener('keypress', e => {
+            if (e.key === 'Enter') loginApp.sendOtp();
+        });
+    });
+</script>
+{% endblock %}

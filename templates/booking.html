@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+{% block title %}Book Vehicle — VehicleHub{% endblock %}
+
+{% block head %}
+<style>
+    .booking-page {
+        padding: 44px 0 80px;
+        flex: 1;
+    }
+
+    .booking-wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 clamp(16px, 3vw, 32px);
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 14px;
+        margin-bottom: 28px;
+        transition: color var(--trans-fast);
+    }
+
+    .back-link:hover {
+        color: var(--sky-400);
+    }
+
+    .booking-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    /* Vehicle preview card */
+    .vp-card {
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+    }
+
+    .vp-card-img {
+        position: relative;
+        height: 220px;
+    }
+
+    .vp-card-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .vp-card-img-fallback {
+        height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(14, 165, 233, 0.05);
+        font-size: 60px;
+        color: rgba(14, 165, 233, 0.15);
+    }
+
+    .vp-card-body {
+        padding: 24px;
+    }
+
+    .vp-card-name {
+        font-size: 22px;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 10px;
+    }
+
+    .vp-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .vp-card-meta span {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .vp-card-meta i {
+        color: var(--sky-500);
+    }
+
+    .vp-price-big {
+        font-size: 30px;
+        font-weight: 900;
+        color: white;
+    }
+
+    .vp-price-big span {
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 20px 0;
+    }
+
+    /* Price breakdown */
+    .breakdown {}
+
+    .bd-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        color: var(--text-secondary);
+        padding: 6px 0;
+    }
+
+    .bd-row.total {
+        font-size: 18px;
+        font-weight: 800;
+        color: white;
+        border-top: 1px solid var(--border);
+        margin-top: 8px;
+        padding-top: 14px;
+    }
+
+    .bd-row.total .bd-val {
+        color: var(--sky-400);
+    }
+
+    /* Booking form card */
+    .bf-card {
+        border-radius: var(--radius-xl);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        padding: 32px;
+    }
+
+    .bf-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 24px;
+    }
+
+    .bf-group {
+        margin-bottom: 20px;
+    }
+
+    /* Availability indicator */
+    .avail-ind {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: var(--radius-md);
+        font-size: 13px;
+        font-weight: 500;
+        margin-top: 10px;
+    }
+
+    .avail-ok {
+        background: rgba(16, 185, 129, 0.1);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .avail-busy {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .avail-check {
+        background: rgba(245, 158, 11, 0.08);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .btn-confirm {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 700;
+        margin-top: 8px;
+        border-radius: var(--radius-md);
+        background: var(--grad-primary);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all var(--trans-mid);
+        box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+    }
+
+    .btn-confirm:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
+    }
+
+    .btn-confirm:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .trust-row {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .trust-row span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .trust-row i {
+        color: var(--sky-500);
+    }
+
+    @media(max-width:700px) {
+        .booking-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="booking-page">
+    <div class="booking-wrap">
+        <a href="/vehicles" class="back-link"><i class="fas fa-arrow-left"></i> Back to Vehicles</a>
+
+        <div class="booking-grid">
+            <!-- Left: Vehicle Preview -->
+            <div>
+                <div class="vp-card" id="vehiclePreview">
+                    <div class="vp-card-img-fallback" id="imgFallback">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="vp-card-body">
+                        <div class="vp-card-name" id="vName">Loading...</div>
+                        <div class="vp-card-meta" id="vMeta"></div>
+                        <div class="vp-price-big" id="vPriceDisplay">₹—<span>/day</span></div>
+                        <hr class="divider">
+                        <div class="breakdown">
+                            <div class="bd-row"><span>Price per day</span><span class="bd-val" id="bdRate">₹—</span>
+                            </div>
+                            <div class="bd-row"><span>Number of days</span><span class="bd-val" id="bdDays">—</span>
+                            </div>
+                            <div class="bd-row total"><span>Total Amount</span><span class="bd-val"
+                                    id="bdTotal">₹—</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Booking Form -->
+            <div>
+                <div class="bf-card">
+                    <h2 class="bf-title"><i class="fas fa-calendar-check"
+                            style="color:var(--sky-400);margin-right:8px;"></i>Book This Vehicle</h2>
+
+                    <form id="bookingForm" novalidate>
+                        <input type="hidden" id="vehicleIdInput">
+                        <div class="bf-group">
+                            <label class="form-label">Pick-up Date</label>
+                            <input type="date" class="form-input" id="startDate" required>
+                        </div>
+                        <div class="bf-group">
+                            <label class="form-label">Return Date</label>
+                            <input type="date" class="form-input" id="endDate" required>
+                        </div>
+                        <div id="availIndicator" style="display:none;"></div>
+
+                        <button type="submit" class="btn-confirm" id="confirmBtn" disabled>
+                            <i class="fas fa-lock"></i> Confirm Booking
+                        </button>
+                    </form>
+
+                    <div class="trust-row">
+                        <span><i class="fas fa-shield-alt"></i> Secure</span>
+                        <span><i class="fas fa-times-circle"></i> Free Cancellation</span>
+                        <span><i class="fas fa-bolt"></i> Instant Booking</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}

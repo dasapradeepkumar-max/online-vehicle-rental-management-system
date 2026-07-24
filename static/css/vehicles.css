@@ -1,0 +1,202 @@
+/* ─── Skeleton Loader ─── */
+.skel {
+  background: linear-gradient(90deg,
+      rgba(14, 165, 233, 0.05) 25%,
+      rgba(14, 165, 233, 0.1) 50%,
+      rgba(14, 165, 233, 0.05) 75%);
+  background-size: 200% 100%;
+  animation: skelShuffle 1.6s infinite linear;
+}
+
+@keyframes skelShuffle {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ─── Vehicle Grid & Cards ─── */
+.v-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  padding-bottom: 40px;
+}
+
+.v-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: all var(--trans-mid);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.v-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--sky-500);
+  box-shadow: 0 12px 30px rgba(14, 165, 233, 0.15);
+}
+
+.v-card-img {
+  position: relative;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  background: rgba(14, 165, 233, 0.05);
+}
+
+.v-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.v-card:hover .v-card-img img {
+  transform: scale(1.08);
+}
+
+/* ─── Badges ─── */
+.v-card-badges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+}
+
+.badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(8px);
+}
+
+.badge-car {
+  background: rgba(14, 165, 233, 0.8);
+  color: white;
+}
+
+.badge-bike {
+  background: rgba(168, 85, 247, 0.8);
+  color: white;
+}
+
+.badge-available {
+  background: rgba(16, 185, 129, 0.8);
+  color: white;
+}
+
+.badge-booked {
+  background: rgba(239, 68, 68, 0.8);
+  color: white;
+}
+
+/* ─── Card Body ─── */
+.v-card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.v-card-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 12px;
+}
+
+.v-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.v-card-meta span {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+
+.v-card-meta i {
+  color: var(--sky-400);
+}
+
+/* ─── Card Footer ─── */
+.v-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.v-card-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.v-card-price .amount {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--sky-400);
+}
+
+.v-card-price .period {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.btn-book-card {
+  background: var(--grad-primary);
+  color: white;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all var(--trans-fast);
+}
+
+.btn-book-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.btn-book-disabled {
+  background: var(--border);
+  color: var(--text-muted);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: not-allowed;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .v-grid {
+    grid-template-columns: 1fr;
+  }
+}

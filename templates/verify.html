@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Verify OTP - Project Title{% endblock %}
+{% block content %}
+<main class="flex-grow-1">
+    <div class="form-container">
+        <h2 class="mb-4 text-center">Enter OTP</h2>
+        <form method="POST" action="{{ url_for('auth.verify') }}">
+            <div class="mb-3">
+                <label for="otp" class="form-label">OTP Code</label>
+                <input type="text" class="form-control" id="otp" name="otp" maxlength="6" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Verify</button>
+        </form>
+    </div>
+</main>
+{% endblock %}

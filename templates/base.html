@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VehicleHub — Real-Time Vehicle Rentals{% endblock %}</title>
+    <meta name="description"
+        content="{% block meta_desc %}Book cars & bikes instantly with real-time availability. Premium vehicle rental platform.{% endblock %}">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Global Design System -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- ── Universal Navbar ──────────────────────────────────────── -->
+    {% block navbar %}
+    <nav class="site-nav" id="siteNav">
+        <a href="{{ url_for('index') }}" class="vh-logo">
+            <div class="vh-logo-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+                </svg>
+            </div>
+            <span class="vh-logo-text">Vehicle<span>Hub</span></span>
+        </a>
+
+        <div class="nav-links-group">
+            <a href="{{ url_for('index') }}" class="nav-link {% block nav_home %}{% endblock %}">Home</a>
+            <a href="{{ url_for('vehicles.list_vehicles') }}"
+                class="nav-link {% block nav_vehicles %}{% endblock %}">Vehicles</a>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('auth.dashboard') }}" class="nav-link {% block nav_dash %}{% endblock %}">Dashboard</a>
+            <a href="{{ url_for('bookings.my_bookings_page') }}"
+                class="nav-link {% block nav_mybookings %}{% endblock %}">My Bookings</a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('admin.admin_panel') }}" class="nav-link {% block nav_admin %}{% endblock %}">Admin</a>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="nav-cta" style="display:flex;align-items:center;gap:10px;">
+            {% if current_user.is_authenticated %}
+            <span style="font-size:13px;color:var(--text-secondary);">
+                <i class="fas fa-user-circle" style="color:var(--sky-500);"></i>
+                {{ current_user.full_name.split()[0] }}
+            </span>
+            <a href="{{ url_for('auth.logout') }}" class="btn-danger">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn-ghost">Login</a>
+            <a href="{{ url_for('auth.register') }}" class="btn-primary">
+                <i class="fas fa-rocket"></i> Get Started
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Mobile hamburger -->
+        <div class="nav-hamburger" id="navHamburger" onclick="toggleMobileMenu()">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile menu -->
+    <div class="nav-mobile-menu" id="mobileMenu">
+        <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('vehicles.list_vehicles') }}" class="nav-link">Vehicles</a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('auth.dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('bookings.my_bookings_page') }}" class="nav-link">My Bookings</a>
+        {% if current_user.is_admin %}
+        <a href="{{ url_for('admin.admin_panel') }}" class="nav-link">Admin Panel</a>
+        {% endif %}
+        <a href="{{ url_for('auth.logout') }}" class="btn-danger" style="width:fit-content;">Logout</a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn-ghost" style="width:fit-content;">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn-primary" style="width:fit-content;">Get Started</a>
+        {% endif %}
+    </div>
+    {% endblock %}
+
+    <!-- ── Page Content ──────────────────────────────────────────── -->
+    <div class="page-body">
+        {% block content %}{% endblock %}
+
+        <!-- ── Universal Footer ──────────────────────────────────────── -->
+        {% block footer %}
+        <footer class="site-footer">
+            <div class="footer-grid section-wrap">
+                <div class="footer-brand">
+                    <a href="{{ url_for('index') }}" class="vh-logo">
+                        <div class="vh-logo-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+                            </svg>
+                        </div>
+                        <span class="vh-logo-text">Vehicle<span>Hub</span></span>
+                    </a>
+                    <p>India's smartest real-time vehicle rental platform. Book cars & bikes instantly, anywhere.</p>
+                    <div class="footer-socials">
+                        <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Platform</h4>
+                    <ul>
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('vehicles.list_vehicles') }}">Browse Vehicles</a></li>
+                        <li><a href="{{ url_for('auth.register') }}">Create Account</a></li>
+                        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Vehicles</h4>
+                    <ul>
+                        <li><a href="{{ url_for('vehicles.list_vehicles') }}?type=car">Cars</a></li>
+                        <li><a href="{{ url_for('vehicles.list_vehicles') }}?type=bike">Bikes</a></li>
+                        <li><a href="{{ url_for('vehicles.list_vehicles') }}">All Vehicles</a></li>
+                        <li><a href="#">Pricing</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Centre</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom section-wrap">
+                <span>© 2026 VehicleHub. All rights reserved.</span>
+                <div class="live-badge"><span class="pulse-dot"></span> Real-Time System Active</div>
+            </div>
+        </footer>
+        {% endblock %}
+    </div>
+
+    <!-- ── Toast Container ──────────────────────────── -->
+    <div id="toast-container"></div>
+
+    <!-- ── Scripts ───────────────────────────────────── -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        // Sticky nav
+        const siteNav = document.getElementById('siteNav');
+        window.addEventListener('scroll', () => {
+            siteNav.classList.toggle('scrolled', window.scrollY > 30);
+        });
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('open');
+        }
+
+        // Global toast utility
+        window.showToast = function (msg, type = 'info', duration = 4000) {
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast toast-${type}`;
+            el.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${msg}</span>`;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0'; el.style.transform = 'translateX(30px)';
+                el.style.transition = 'all 0.3s'; setTimeout(() => el.remove(), 300);
+            }, duration);
+        };
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

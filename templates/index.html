@@ -1,0 +1,927 @@
+{% extends "base.html" %}
+{% block title %}VehicleHub — Rent Cars & Bikes in Real-Time{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Hero ──────────────────────────────────────────────────── */
+  .hero {
+    min-height: calc(100vh - 68px);
+    background: var(--grad-hero);
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 80px clamp(16px, 4vw, 48px);
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(14, 165, 233, 0.10) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 20% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Floating particle dots */
+  .hero-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .hero-particles span {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--sky-500), transparent);
+    opacity: 0.12;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .hero-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .hero-left {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: rgba(14, 165, 233, 0.1);
+    border: 1px solid var(--border-mid);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sky-400);
+  }
+
+  .hero-tag .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sky-400);
+    animation: pulseDot 1.5s infinite;
+  }
+
+  .hero-title {
+    font-size: clamp(38px, 5.5vw, 66px);
+    font-weight: 900;
+    line-height: 1.06;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+  }
+
+  .hero-title .line2 {
+    background: linear-gradient(135deg, var(--sky-300), var(--cyan-400));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 460px;
+    margin-bottom: 36px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 48px;
+  }
+
+  .btn-hero {
+    padding: 14px 30px;
+    font-size: 15px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .hstat {
+    text-align: center;
+  }
+
+  .hstat-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: white;
+  }
+
+  .hstat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Hero right — vehicle showcase */
+  .hero-right {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-main-card {
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
+  }
+
+  .hero-main-card img {
+    width: 100%;
+    height: 360px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .hero-main-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 24px;
+    background: linear-gradient(to top, rgba(5, 8, 15, 0.95), transparent);
+  }
+
+  .hero-main-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .hero-main-meta {
+    font-size: 13px;
+    color: var(--sky-300);
+    margin-top: 4px;
+  }
+
+  .hero-mini-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .mini-card {
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform var(--trans-mid);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  .mini-card:hover {
+    transform: scale(1.03);
+  }
+
+  .mini-card img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .mini-card-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 12px;
+    background: linear-gradient(to top, rgba(5, 8, 15, 0.9), transparent);
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+  }
+
+  /* ── Live Stats Bar ──────────────────────────────────────── */
+  .stats-bar {
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 28px clamp(16px, 4vw, 48px);
+  }
+
+  .stats-bar-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -1px;
+  }
+
+  .stat-number .accent {
+    color: var(--sky-400);
+  }
+
+  .stat-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .stat-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #34d399;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  /* ── Vehicles Section ────────────────────────────────────── */
+  .vehicles-section {
+    padding: 96px clamp(16px, 4vw, 48px);
+  }
+
+  .section-head {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+
+  /* Vehicle filter bar */
+  .vfilter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+
+  .vfilter-btn {
+    padding: 9px 22px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--trans-fast);
+  }
+
+  .vfilter-btn:hover {
+    border-color: var(--sky-500);
+    color: var(--sky-400);
+  }
+
+  .vfilter-btn.active {
+    background: var(--grad-primary);
+    border-color: transparent;
+    color: white;
+  }
+
+  /* Grid */
+  .index-vehicle-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 24px;
+  }
+
+  /* Vehicle card */
+  .v-card {
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    transition: all var(--trans-slow);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .v-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(14, 165, 233, 0.25);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(14, 165, 233, 0.15);
+  }
+
+  .v-card.booked {
+    opacity: 0.65;
+  }
+
+  .v-card-img {
+    position: relative;
+    height: 190px;
+    overflow: hidden;
+  }
+
+  .v-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+    display: block;
+  }
+
+  .v-card:hover .v-card-img img {
+    transform: scale(1.07);
+  }
+
+  .v-card-badges {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .v-card-body {
+    padding: 20px;
+  }
+
+  .v-card-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+  }
+
+  .v-card-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .v-card-meta span {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .v-card-meta i {
+    color: var(--sky-500);
+    font-size: 11px;
+  }
+
+  .v-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .v-card-price {}
+
+  .v-card-price .amount {
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+  }
+
+  .v-card-price .period {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 2px;
+  }
+
+  .btn-book-card {
+    padding: 9px 20px;
+    border-radius: var(--radius-md);
+    background: var(--grad-primary);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all var(--trans-mid);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-book-card:hover {
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+    transform: translateY(-1px);
+    color: white;
+  }
+
+  .btn-book-disabled {
+    padding: 9px 18px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    font-size: 13px;
+    border: 1px solid var(--border);
+    cursor: not-allowed;
+  }
+
+  /* ── Features Section ──────────────────────────────────── */
+  .features-section {
+    padding: 96px clamp(16px, 4vw, 48px);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .features-grid {
+    max-width: 1200px;
+    margin: 48px auto 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .feature-card {
+    padding: 32px;
+    border-radius: var(--radius-xl);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    transition: all var(--trans-mid);
+  }
+
+  .feature-card:hover {
+    border-color: var(--border-mid);
+    transform: translateY(-4px);
+  }
+
+  .feature-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(6, 182, 212, 0.1));
+    border: 1px solid var(--border-mid);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: var(--sky-400);
+    margin-bottom: 20px;
+  }
+
+  .feature-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  /* ── CTA Section ──────────────────────────────────────── */
+  .cta-section {
+    padding: 96px clamp(16px, 4vw, 48px);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(14, 165, 233, 0.08), transparent);
+  }
+
+  .cta-inner {
+    max-width: 640px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-inner .section-title {
+    font-size: clamp(28px, 4vw, 44px);
+  }
+
+  .cta-inner .section-sub {
+    margin: 16px auto 36px;
+  }
+
+  .cta-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ── Responsive ──────────────────────────────────────── */
+  @media(max-width:900px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+
+    .hero-right {
+      order: -1;
+    }
+
+    .hero-main-card img {
+      height: 260px;
+    }
+
+    .stats-bar-inner {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media(max-width:600px) {
+    .stats-bar-inner {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .hero-mini-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ══════════ HERO ══════════ -->
+<section class="hero">
+  <div class="hero-particles" id="heroParticles"></div>
+  <div class="hero-inner section-wrap" style="max-width:1200px;">
+
+    <!-- Left -->
+    <div class="hero-left">
+      <div class="hero-tag">
+        <span class="dot"></span>
+        Real-Time Availability · Updated Live
+      </div>
+      <h1 class="hero-title">
+        Rent Any Ride,<br>
+        <span class="line2">Anywhere in India</span>
+      </h1>
+      <p class="hero-sub">
+        Book premium cars and bikes instantly. Real-time availability, transparent pricing,
+        and seamless OTP-based login — all in one platform.
+      </p>
+      <div class="hero-actions">
+        <a href="{{ url_for('vehicles.list_vehicles') }}" class="btn-primary btn-hero">
+          <i class="fas fa-search"></i> Browse Vehicles
+        </a>
+        {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.register') }}" class="btn-ghost btn-hero">
+          <i class="fas fa-user-plus"></i> Create Free Account
+        </a>
+        {% endif %}
+      </div>
+      <div class="hero-stats">
+        <div class="hstat">
+          <div class="hstat-value" id="heroTotalVehicles">10+</div>
+          <div class="hstat-label">Vehicles</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-value" id="heroAvailable" style="color:var(--sky-400);">—</div>
+          <div class="hstat-label">Available Now</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-value" id="heroUsers">—</div>
+          <div class="hstat-label">Happy Riders</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right — hero vehicle cards -->
+    <div class="hero-right">
+      <div class="hero-main-card">
+        <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?w=900&q=85&auto=format&fit=crop"
+          alt="BMW X5" loading="eager">
+        <div class="hero-main-overlay">
+          <div class="hero-main-name">BMW X5 Luxury SUV</div>
+          <div class="hero-main-meta">₹3,200/day · Delhi · <span style="color:#34d399;">● Available</span></div>
+        </div>
+      </div>
+      <div class="hero-mini-cards">
+        <div class="mini-card">
+          <img src="https://images.unsplash.com/photo-1558981285-6f0c68243e90?w=500&q=80&auto=format&fit=crop"
+            alt="Royal Enfield" loading="lazy">
+          <div class="mini-card-label">Royal Enfield 350 · ₹700/day</div>
+        </div>
+        <div class="mini-card">
+          <img src="https://images.unsplash.com/photo-1616788494672-ec7ca25fdda9?w=500&q=80&auto=format&fit=crop"
+            alt="Hyundai Creta" loading="lazy">
+          <div class="mini-card-label">Hyundai Creta · ₹1,200/day</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════ LIVE STATS BAR ══════════ -->
+<section class="stats-bar">
+  <div class="stats-bar-inner">
+    <div class="stat-item">
+      <div class="stat-number"><span id="statTotal" class="accent">10</span></div>
+      <div class="stat-desc">Premium Vehicles</div>
+      <div class="stat-live"><span class="pulse-dot"></span>Live count</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="statAvailable">—</div>
+      <div class="stat-desc">Available Right Now</div>
+      <div class="stat-live"><span class="pulse-dot"></span>Real-time</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="statActiveRentals">—</div>
+      <div class="stat-desc">Active Rentals Today</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="statUsers">—</div>
+      <div class="stat-desc">Registered Users</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ VEHICLES SHOWCASE ══════════ -->
+<section class="vehicles-section">
+  <div class="section-head">
+    <div class="section-label" style="justify-content:center;display:inline-flex;">
+      <i class="fas fa-car-side"></i> Our Fleet
+    </div>
+    <h2 class="section-title">Choose Your Perfect Ride</h2>
+    <p class="section-sub" style="margin:0 auto;">From economy sedans to premium SUVs and sporty bikes — all at
+      transparent prices.</p>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="vfilter-bar">
+    <button class="vfilter-btn active" onclick="indexApp.filterVehicles('all', this)">
+      <i class="fas fa-th"></i> All
+    </button>
+    <button class="vfilter-btn" onclick="indexApp.filterVehicles('car', this)">
+      <i class="fas fa-car"></i> Cars
+    </button>
+    <button class="vfilter-btn" onclick="indexApp.filterVehicles('bike', this)">
+      <i class="fas fa-motorcycle"></i> Bikes
+    </button>
+    <button class="vfilter-btn" onclick="indexApp.filterVehicles('available', this)">
+      <i class="fas fa-check-circle"></i> Available Only
+    </button>
+  </div>
+
+  <div class="index-vehicle-grid" id="indexVehicleGrid">
+    <!-- Skeleton -->
+    <div class="skel" style="height:320px;border-radius:20px;"></div>
+    <div class="skel" style="height:320px;border-radius:20px;"></div>
+    <div class="skel" style="height:320px;border-radius:20px;"></div>
+    <div class="skel" style="height:320px;border-radius:20px;"></div>
+    <div class="skel" style="height:320px;border-radius:20px;"></div>
+    <div class="skel" style="height:320px;border-radius:20px;"></div>
+  </div>
+
+  <div style="text-align:center;margin-top:48px;">
+    <a href="{{ url_for('vehicles.list_vehicles') }}" class="btn-primary" style="padding:14px 32px;font-size:15px;">
+      <i class="fas fa-arrow-right"></i> View All Vehicles
+    </a>
+  </div>
+</section>
+
+<!-- ══════════ FEATURES ══════════ -->
+<section class="features-section">
+  <div class="section-head">
+    <div class="section-label" style="justify-content:center;display:inline-flex;">
+      <i class="fas fa-star"></i> Why VehicleHub
+    </div>
+    <h2 class="section-title">Built for the Modern Traveller</h2>
+  </div>
+  <div class="features-grid section-wrap">
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+      <h3 class="feature-title">Real-Time Availability</h3>
+      <p class="feature-desc">Vehicle statuses update live via WebSockets. No stale data, no double bookings — ever.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+      <h3 class="feature-title">Secure OTP Login</h3>
+      <p class="feature-desc">No passwords to remember. We send a one-time code to your email for every login — safe and
+        simple.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fas fa-rupee-sign"></i></div>
+      <h3 class="feature-title">Transparent Pricing</h3>
+      <p class="feature-desc">See the total cost before you book. No hidden fees or surprise charges — ever.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fas fa-map-marker-alt"></i></div>
+      <h3 class="feature-title">Multiple Cities</h3>
+      <p class="feature-desc">Available in Mumbai, Delhi, Bangalore, Hyderabad, Goa and more with growing coverage.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fas fa-times-circle"></i></div>
+      <h3 class="feature-title">Free Cancellation</h3>
+      <p class="feature-desc">Cancel upcoming bookings anytime at no extra cost. We believe in hassle-free flexibility.
+      </p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fas fa-headset"></i></div>
+      <h3 class="feature-title">24/7 Support</h3>
+      <p class="feature-desc">Our support team is always available via email and chat for any assistance you need.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ CTA ══════════ -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <div class="section-label" style="justify-content:center;display:inline-flex;">
+      <i class="fas fa-rocket"></i> Ready to Ride?
+    </div>
+    <h2 class="section-title">Your Next Journey Starts Here</h2>
+    <p class="section-sub">Join hundreds of riders who trust VehicleHub for their daily travel and weekend adventures.
+    </p>
+    <div class="cta-actions">
+      <a href="{{ url_for('vehicles.list_vehicles') }}" class="btn-primary" style="padding:14px 30px;font-size:15px;">
+        <i class="fas fa-car"></i> Book a Vehicle
+      </a>
+      {% if not current_user.is_authenticated %}
+      <a href="{{ url_for('auth.register') }}" class="btn-ghost" style="padding:13px 28px;font-size:15px;">
+        Create Free Account
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Hero particle generator ──────────────────────────────────
+  (function () {
+    const container = document.getElementById('heroParticles');
+    if (!container) return;
+    for (let i = 0; i < 12; i++) {
+      const s = document.createElement('span');
+      const size = Math.random() * 300 + 80;
+      s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random() * 100}%;left:${Math.random() * 100}%;
+      animation-delay:${Math.random() * 4}s;animation-duration:${6 + Math.random() * 6}s;`;
+      container.appendChild(s);
+    }
+  })();
+
+  // ── Index App ────────────────────────────────────────────────
+  const indexApp = {
+    all: [],
+    currentFilter: 'all',
+    socket: io(),
+
+    async init() {
+      await this.loadStats();
+      await this.loadVehicles();
+      this.setupSocket();
+      // Refresh stats every 30s
+      setInterval(() => this.loadStats(), 30000);
+    },
+
+    async loadStats() {
+      try {
+        const r = await fetch('/api/public/stats');
+        const d = await r.json();
+        const fmt = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : n;
+        document.getElementById('statTotal').textContent = d.total_vehicles ?? '—';
+        document.getElementById('statAvailable').textContent = d.available ?? '—';
+        document.getElementById('statActiveRentals').textContent = d.active_rentals ?? '—';
+        document.getElementById('statUsers').textContent = fmt(d.total_users ?? 0);
+        document.getElementById('heroTotalVehicles').textContent = (d.total_vehicles ?? 0) + '+';
+        document.getElementById('heroAvailable').textContent = d.available ?? '—';
+        document.getElementById('heroUsers').textContent = fmt(d.total_users ?? 0);
+      } catch (e) { console.warn('Stats load failed', e); }
+    },
+
+    async loadVehicles() {
+      try {
+        const r = await fetch('/api/public/vehicles');
+        const data = await r.json();
+        this.all = Array.isArray(data) ? data : (data.vehicles || []);
+        this.renderVehicles();
+      } catch (e) {
+        document.getElementById('indexVehicleGrid').innerHTML =
+          `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">
+           <i class="fas fa-exclamation-circle" style="font-size:36px;margin-bottom:12px;display:block;"></i>
+           Could not load vehicles. Refresh the page.
+         </div>`;
+      }
+    },
+
+    filterVehicles(type, btn) {
+      this.currentFilter = type;
+      document.querySelectorAll('.vfilter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      this.renderVehicles();
+    },
+
+    renderVehicles() {
+      const grid = document.getElementById('indexVehicleGrid');
+      let list = [...this.all];
+      if (this.currentFilter === 'car') list = list.filter(v => v.type === 'car');
+      else if (this.currentFilter === 'bike') list = list.filter(v => v.type === 'bike');
+      else if (this.currentFilter === 'available') list = list.filter(v => v.status === 'available');
+
+      if (list.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">
+        <i class="fas fa-search" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.3;"></i>
+        No vehicles match this filter</div>`;
+        return;
+      }
+
+      grid.innerHTML = list.map(v => this.vehicleCard(v)).join('');
+    },
+
+    vehicleCard(v) {
+      const avail = v.status === 'available';
+      const typeIcon = v.type === 'bike' ? 'fa-motorcycle' : 'fa-car';
+      const img = v.image
+        ? `<img src="${v.image}&auto=format&fit=crop&w=600&q=80" alt="${v.name}"
+              onerror="this.style.display='none';this.parentElement.querySelector('.img-fallback').style.display='flex';"
+              loading="lazy" style="width:100%;height:190px;object-fit:cover;display:block;">`
+        : '';
+      return `
+    <div class="v-card${avail ? '' : ' booked'}" onclick="window.location.href='/booking?vehicle_id=${v.id}'" style="${avail ? '' : 'cursor:not-allowed;'}">
+      <div class="v-card-img">
+        <div class="img-fallback" style="display:${v.image ? 'none' : 'flex'};height:190px;align-items:center;justify-content:center;background:rgba(14,165,233,0.05);">
+          <i class="fas ${typeIcon}" style="font-size:52px;color:rgba(14,165,233,0.2);"></i>
+        </div>
+        ${img}
+        <div class="v-card-badges">
+          <span class="badge ${v.type === 'bike' ? 'badge-bike' : 'badge-car'}">${v.type}</span>
+          <span class="badge ${avail ? 'badge-available' : 'badge-booked'}">
+            ${avail ? '● Available' : '● Booked'}
+          </span>
+        </div>
+      </div>
+      <div class="v-card-body">
+        <div class="v-card-name">${v.name}</div>
+        <div class="v-card-meta">
+          <span><i class="fas fa-map-marker-alt"></i> ${v.location || 'City'}</span>
+          <span><i class="fas fa-gas-pump"></i> ${v.fuel || 'Petrol'}</span>
+          ${v.seats ? `<span><i class="fas fa-user"></i> ${v.seats} seats</span>` : ''}
+        </div>
+        <div class="v-card-footer">
+          <div class="v-card-price">
+            <span class="amount">₹${(v.price_per_day || 0).toLocaleString('en-IN')}</span>
+            <span class="period">/day</span>
+          </div>
+          ${avail
+          ? `<a href="/booking?vehicle_id=${v.id}" class="btn-book-card" onclick="event.stopPropagation()">
+                 <i class="fas fa-calendar-plus"></i> Book
+               </a>`
+          : `<span class="btn-book-disabled"><i class="fas fa-lock"></i> Unavailable</span>`
+        }
+        </div>
+      </div>
+    </div>`;
+    },
+
+    setupSocket() {
+      this.socket.on('vehicle_status_update', (data) => {
+        const v = this.all.find(x => x.id === data.vehicle_id);
+        if (v) { v.status = data.status; this.renderVehicles(); }
+        this.loadStats();
+      });
+      this.socket.on('booking_confirmed', () => this.loadStats());
+      this.socket.on('booking_cancelled', () => { this.loadStats(); this.loadVehicles(); });
+      this.socket.on('user_registered', () => this.loadStats());
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => indexApp.init());
+</script>
+{% endblock %}

@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+{% block title %}Create Account — VehicleHub{% endblock %}
+
+{% block head %}
+<style>
+    body {
+        background: var(--grad-hero);
+    }
+
+    .auth-page {
+        min-height: calc(100vh - 68px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-page::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 60% 70% at 70% 50%, rgba(14, 165, 233, 0.10), transparent);
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 480px;
+        background: rgba(17, 24, 39, 0.9);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-2xl);
+        padding: 44px;
+        backdrop-filter: blur(20px);
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    }
+
+    .auth-logo {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 28px;
+    }
+
+    .auth-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: white;
+        text-align: center;
+        margin-bottom: 6px;
+    }
+
+    .auth-sub {
+        font-size: 14px;
+        color: var(--text-secondary);
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .btn-full {
+        width: 100%;
+        padding: 13px;
+        font-size: 15px;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+
+    .auth-footer a {
+        color: var(--sky-400);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .otp-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .otp-box {
+        width: 50px;
+        height: 58px;
+        border-radius: 12px;
+        text-align: center;
+        background: rgba(14, 165, 233, 0.06);
+        border: 1.5px solid var(--border);
+        color: white;
+        font-size: 22px;
+        font-weight: 700;
+        outline: none;
+        transition: all var(--trans-fast);
+    }
+
+    .otp-box:focus {
+        border-color: var(--sky-500);
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    }
+
+    .otp-timer {
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+    }
+
+    .otp-timer span {
+        color: var(--sky-400);
+        font-weight: 600;
+    }
+
+    .step-badges {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-bottom: 28px;
+    }
+
+    .sbadge {
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        background: rgba(14, 165, 233, 0.08);
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+    }
+
+    .sbadge.active {
+        background: var(--grad-primary);
+        border-color: transparent;
+        color: white;
+    }
+
+    .error-msg {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        color: #f87171;
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <a href="{{ url_for('index') }}" class="vh-logo">
+                <div class="vh-logo-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"
+                            fill="white" />
+                    </svg>
+                </div>
+                <span class="vh-logo-text">Vehicle<span>Hub</span></span>
+            </a>
+        </div>
+
+        <!-- Step badges -->
+        <div class="step-badges">
+            <span class="sbadge active" id="sb1">1. Details</span>
+            <span class="sbadge" id="sb2">2. Verify</span>
+        </div>
+
+        <!-- Step 1: User details -->
+        <div id="regStep1">
+            <h1 class="auth-title">Create Your Account</h1>
+            <p class="auth-sub">Join VehicleHub and start riding today</p>
+
+            <div id="reg1Error" style="display:none;"></div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" id="regFirst" class="form-input" placeholder="John" autocomplete="given-name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" id="regLast" class="form-input" placeholder="Doe" autocomplete="family-name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="regEmail" class="form-input" placeholder="you@example.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" id="regPhone" class="form-input" placeholder="+91 98765 43210" autocomplete="tel">
+            </div>
+
+            <button class="btn-primary btn-full" id="regNextBtn" onclick="regApp.sendOtp()">
+                <i class="fas fa-paper-plane"></i> Send Verification OTP
+            </button>
+            <div class="auth-footer">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></div>
+        </div>
+
+        <!-- Step 2: OTP verify -->
+        <div id="regStep2" style="display:none;">
+            <h1 class="auth-title">Verify Your Email</h1>
+            <p class="auth-sub">Enter the 6-digit code sent to <strong id="regSentTo"
+                    style="color:var(--sky-400);"></strong></p>
+
+            <div id="reg2Error" style="display:none;"></div>
+
+            <div class="otp-row">
+                <input class="otp-box" type="text" maxlength="1" id="rotp0" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="rotp1" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="rotp2" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="rotp3" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="rotp4" inputmode="numeric">
+                <input class="otp-box" type="text" maxlength="1" id="rotp5" inputmode="numeric">
+            </div>
+            <div class="otp-timer">Expires in <span id="regTimer">5:00</span></div>
+
+            <button class="btn-primary btn-full" id="regVerifyBtn" onclick="regApp.verifyAndRegister()">
+                <i class="fas fa-user-check"></i> Create Account
+            </button>
+            <div class="auth-footer"><a href="#" onclick="regApp.goBack()">← Back</a></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const regApp = {
+        email: '',
+        timer: null,
+        seconds: 300,
+
+        async sendOtp() {
+            const first = document.getElementById('regFirst').value.trim();
+            const last = document.getElementById('regLast').value.trim();
+            this.email = document.getElementById('regEmail').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+
+            if (!first || !last) { this.err('reg1Error', 'Please enter your full name'); return; }
+            if (!this.email.includes('@')) { this.err('reg1Error', 'Please enter a valid email'); return; }
+
+            const btn = document.getElementById('regNextBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+            try {
+                const r = await fetch('/api/auth/send-otp', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: this.email })
+                });
+                const d = await r.json();
+                if (r.ok) {
+                    document.getElementById('regStep1').style.display = 'none';
+                    document.getElementById('regStep2').style.display = 'block';
+                    document.getElementById('sb2').classList.add('active');
+                    document.getElementById('regSentTo').textContent = this.email;
+                    this.setupOtp();
+                    this.startTimer();
+                    showToast('OTP sent!', 'success');
+                } else {
+                    this.err('reg1Error', d.message || 'Failed to send OTP');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Verification OTP';
+                }
+            } catch { this.err('reg1Error', 'Network error'); btn.disabled = false; }
+        },
+
+        async verifyAndRegister() {
+            const otp = [...document.querySelectorAll('.otp-box')].map(b => b.value).join('');
+            if (otp.length < 6) { this.err('reg2Error', 'Enter all 6 digits'); return; }
+
+            const btn = document.getElementById('regVerifyBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+
+            const fullName = document.getElementById('regFirst').value.trim() + ' ' + document.getElementById('regLast').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+
+            try {
+                const r = await fetch('/api/auth/register', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ full_name: fullName, email: this.email, phone, otp })
+                });
+                const d = await r.json();
+                if (r.ok) {
+                    if (d.token) localStorage.setItem('auth_token', d.token);
+                    showToast('Account created! Welcome to VehicleHub 🎉', 'success');
+                    clearInterval(this.timer);
+                    setTimeout(() => window.location.href = '/dashboard', 1500);
+                } else {
+                    this.err('reg2Error', d.message || 'Registration failed');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-user-check"></i> Create Account';
+                }
+            } catch { this.err('reg2Error', 'Network error'); btn.disabled = false; }
+        },
+
+        setupOtp() {
+            const boxes = document.querySelectorAll('.otp-box');
+            boxes.forEach((box, i) => {
+                box.value = '';
+                box.addEventListener('input', e => {
+                    e.target.value = e.target.value.replace(/\D/g, '').slice(-1);
+                    if (e.target.value && i < 5) boxes[i + 1].focus();
+                    if ([...boxes].every(b => b.value)) this.verifyAndRegister();
+                });
+                box.addEventListener('keydown', e => { if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus(); });
+            });
+            boxes[0].focus();
+        },
+
+        startTimer() {
+            this.seconds = 300;
+            clearInterval(this.timer);
+            this.updateTimer();
+            this.timer = setInterval(() => {
+                this.seconds--;
+                this.updateTimer();
+                if (this.seconds <= 0) { clearInterval(this.timer); document.getElementById('regTimer').textContent = 'Expired'; }
+            }, 1000);
+        },
+        updateTimer() {
+            const m = Math.floor(this.seconds / 60), s = this.seconds % 60;
+            document.getElementById('regTimer').textContent = `${m}:${String(s).padStart(2, '0')}`;
+        },
+        goBack() {
+            document.getElementById('regStep2').style.display = 'none';
+            document.getElementById('regStep1').style.display = 'block';
+            document.getElementById('sb2').classList.remove('active');
+            clearInterval(this.timer);
+        },
+        err(id, msg) {
+            const el = document.getElementById(id);
+            el.style.display = 'flex';
+            el.className = 'error-msg';
+            el.innerHTML = `<i class="fas fa-exclamation-circle"></i>${msg}`;
+        }
+    };
+</script>
+{% endblock %}

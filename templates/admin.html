@@ -1,0 +1,701 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — VehicleHub{% endblock %}
+{% block nav_admin %}active{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block head %}
+<style>
+    body {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .admin-sidebar {
+        width: 240px;
+        min-height: 100vh;
+        background: var(--bg-surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+    }
+
+    .asb-brand {
+        padding: 24px 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .asb-brand .vh-logo-text {
+        font-size: 18px;
+    }
+
+    .asb-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+        margin-left: 46px;
+    }
+
+    .asb-nav {
+        padding: 16px 12px;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .asb-section {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 8px 12px;
+        margin-top: 8px;
+    }
+
+    .asb-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: var(--radius-md);
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all var(--trans-fast);
+        margin-bottom: 2px;
+        text-decoration: none;
+    }
+
+    .asb-link i {
+        width: 16px;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .asb-link:hover {
+        background: rgba(14, 165, 233, 0.08);
+        color: var(--text-primary);
+    }
+
+    .asb-link.active {
+        background: rgba(14, 165, 233, 0.12);
+        color: var(--sky-400);
+        border: 1px solid rgba(14, 165, 233, 0.15);
+    }
+
+    .asb-footer {
+        padding: 16px 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    /* ── Main ── */
+    .admin-main {
+        margin-left: 240px;
+        flex: 1;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .admin-topbar {
+        height: 64px;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+
+    .topbar-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .admin-content {
+        padding: 28px 32px;
+        flex: 1;
+    }
+
+    /* ── KPI ── */
+    .akpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .akpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: all var(--trans-fast);
+    }
+
+    .akpi-card:hover {
+        border-color: var(--border-mid);
+    }
+
+    .akpi-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+    }
+
+    .akpi-card.c1::after {
+        background: var(--grad-accent);
+    }
+
+    .akpi-card.c2::after {
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .akpi-card.c3::after {
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .akpi-card.c4::after {
+        background: linear-gradient(90deg, #8b5cf6, #6d28d9);
+    }
+
+    .akpi-lbl {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .akpi-lbl i {
+        font-size: 15px;
+        opacity: 0.35;
+    }
+
+    .akpi-val {
+        font-size: 28px;
+        font-weight: 800;
+        color: white;
+    }
+
+    .akpi-sub {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    /* Section grid */
+    .ag2 {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .a-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .a-card-head {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .a-card-head h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .a-card-body {
+        padding: 20px 22px;
+    }
+
+    /* Data tables */
+    .adt {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .adt th {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 10px 0 10px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .adt td {
+        padding: 13px 0;
+        border-bottom: 1px solid rgba(14, 165, 233, 0.05);
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .adt tr:last-child td {
+        border-bottom: none;
+    }
+
+    .adt tr:hover td {
+        color: var(--text-primary);
+    }
+
+    .adt td strong {
+        color: white;
+        font-weight: 600;
+    }
+
+    /* Live feed */
+    .feed-list {
+        max-height: 340px;
+        overflow-y: auto;
+    }
+
+    .feed-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .feed-item:last-child {
+        border-bottom: none;
+    }
+
+    .fi-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+
+    .fi-text strong {
+        font-size: 13px;
+        color: white;
+        display: block;
+    }
+
+    .fi-text span {
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+
+    /* Add vehicle modal */
+    .modal-bg {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-bg.open {
+        display: flex;
+    }
+
+    .modal-box {
+        background: var(--bg-card2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-2xl);
+        padding: 32px;
+        width: 440px;
+        max-width: 95vw;
+    }
+
+    .modal-box h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 22px;
+    }
+
+    .mf-group {
+        margin-bottom: 16px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .btn-modal-cancel {
+        flex: 1;
+        padding: 11px;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 14px;
+        transition: all var(--trans-fast);
+    }
+
+    .btn-modal-cancel:hover {
+        color: white;
+    }
+
+    .btn-modal-save {
+        flex: 1;
+        padding: 11px;
+        border-radius: var(--radius-md);
+        background: var(--grad-primary);
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .btn-add-v {
+        padding: 9px 18px;
+        border-radius: var(--radius-md);
+        border: none;
+        background: var(--grad-primary);
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    @media(max-width:1100px) {
+        .akpi-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .ag2 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media(max-width:768px) {
+        .admin-sidebar {
+            width: 64px;
+        }
+
+        .asb-brand .vh-logo-text,
+        .asb-link span,
+        .asb-section {
+            display: none;
+        }
+
+        .admin-main {
+            margin-left: 64px;
+        }
+
+        .admin-content {
+            padding: 20px 16px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Sidebar -->
+<aside class="admin-sidebar">
+    <div class="asb-brand">
+        <a href="{{ url_for('index') }}" class="vh-logo">
+            <div class="vh-logo-icon" style="width:30px;height:30px;border-radius:8px;">
+                <svg viewBox="0 0 24 24" style="width:16px;height:16px;">
+                    <path
+                        d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"
+                        fill="white" />
+                </svg>
+            </div>
+            <span class="vh-logo-text">Vehicle<span>Hub</span></span>
+        </a>
+        <div class="asb-sub">Admin Console</div>
+    </div>
+    <nav class="asb-nav">
+        <div class="asb-section">Main</div>
+        <a class="asb-link active" onclick="adminApp.tab('overview',this)">
+            <i class="fas fa-chart-pie"></i><span>Overview</span>
+        </a>
+        <a class="asb-link" onclick="adminApp.tab('vehicles',this)">
+            <i class="fas fa-car"></i><span>Vehicles</span>
+        </a>
+        <a class="asb-link" onclick="adminApp.tab('bookings',this)">
+            <i class="fas fa-calendar-alt"></i><span>Bookings</span>
+        </a>
+        <a class="asb-link" onclick="adminApp.tab('users',this)">
+            <i class="fas fa-users"></i><span>Users</span>
+        </a>
+        <div class="asb-section">System</div>
+        <a href="{{ url_for('index') }}" class="asb-link">
+            <i class="fas fa-external-link-alt"></i><span>View Site</span>
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="asb-link" style="color:#f87171;">
+            <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        </a>
+    </nav>
+</aside>
+
+<!-- Main -->
+<div class="admin-main">
+    <div class="admin-topbar">
+        <div class="topbar-title" id="adminPageTitle">Dashboard Overview</div>
+        <div class="topbar-right">
+            <div class="live-pill"><span class="pulse-dot"></span> Real-Time</div>
+            <div style="width:34px;height:34px;border-radius:50%;background:var(--grad-primary);
+                  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;">A
+            </div>
+        </div>
+    </div>
+
+    <!-- Overview Tab -->
+    <div id="tab-overview" class="admin-content">
+        <div class="akpi-grid">
+            <div class="akpi-card c1">
+                <div class="akpi-lbl">Total Revenue <i class="fas fa-rupee-sign"></i></div>
+                <div class="akpi-val" id="akRevenue">₹0</div>
+                <div class="akpi-sub">All time</div>
+            </div>
+            <div class="akpi-card c2">
+                <div class="akpi-lbl">Active Rentals <i class="fas fa-car"></i></div>
+                <div class="akpi-val" id="akActive">0</div>
+                <div class="akpi-sub">Today</div>
+            </div>
+            <div class="akpi-card c3">
+                <div class="akpi-lbl">Total Users <i class="fas fa-users"></i></div>
+                <div class="akpi-val" id="akUsers">0</div>
+                <div class="akpi-sub">Registered</div>
+            </div>
+            <div class="akpi-card c4">
+                <div class="akpi-lbl">Vehicles <i class="fas fa-car-side"></i></div>
+                <div class="akpi-val" id="akVehicles">0</div>
+                <div class="akpi-sub" id="akVSub">Available: 0</div>
+            </div>
+        </div>
+
+        <div class="ag2">
+            <!-- Revenue chart -->
+            <div class="a-card">
+                <div class="a-card-head">
+                    <h3>Revenue Trend</h3>
+                    <span style="font-size:12px;color:var(--text-muted);">Last 6 months</span>
+                </div>
+                <div class="a-card-body"><canvas id="revenueChart" height="200"></canvas></div>
+            </div>
+            <!-- Type chart -->
+            <div class="a-card">
+                <div class="a-card-head">
+                    <h3>Vehicle Fleet Breakdown</h3>
+                </div>
+                <div class="a-card-body" style="display:flex;align-items:center;justify-content:center;">
+                    <canvas id="typeChart" height="220" style="max-width:220px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="ag2">
+            <!-- Recent bookings -->
+            <div class="a-card">
+                <div class="a-card-head">
+                    <h3>Recent Bookings</h3>
+                    <a onclick="adminApp.tab('bookings')"
+                        style="cursor:pointer;font-size:13px;color:var(--sky-400);">View all →</a>
+                </div>
+                <div class="a-card-body">
+                    <table class="adt">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Vehicle</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbRecentBookings">
+                            <tr>
+                                <td colspan="4" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                    Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Live feed -->
+            <div class="a-card">
+                <div class="a-card-head">
+                    <h3>Live Activity Feed</h3>
+                    <div class="live-pill"><span class="pulse-dot"></span> Live</div>
+                </div>
+                <div class="a-card-body">
+                    <div class="feed-list" id="liveFeed">
+                        <div style="text-align:center;padding:30px;color:var(--text-muted);">
+                            <i class="fas fa-satellite-dish"
+                                style="font-size:24px;display:block;margin-bottom:8px;opacity:0.3;"></i>
+                            Awaiting events...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicles Tab -->
+    <div id="tab-vehicles" class="admin-content" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <h2 style="font-size:20px;font-weight:800;color:white;">Vehicle Management</h2>
+            <button class="btn-add-v" onclick="adminApp.openModal()">
+                <i class="fas fa-plus"></i> Add Vehicle
+            </button>
+        </div>
+        <div class="a-card">
+            <div class="a-card-body">
+                <table class="adt">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Price/Day</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                            <th>Bookings</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbVehicles">
+                        <tr>
+                            <td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings Tab -->
+    <div id="tab-bookings" class="admin-content" style="display:none;">
+        <h2 style="font-size:20px;font-weight:800;color:white;margin-bottom:20px;">All Bookings</h2>
+        <div class="a-card">
+            <div class="a-card-body">
+                <table class="adt">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Customer</th>
+                            <th>Vehicle</th>
+                            <th>Dates</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Control</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbAllBookings">
+                        <tr>
+                            <td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="tab-users" class="admin-content" style="display:none;">
+        <h2 style="font-size:20px;font-weight:800;color:white;margin-bottom:20px;">Registered Users</h2>
+        <div class="a-card">
+            <div class="a-card-body">
+                <table class="adt">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Bookings</th>
+                            <th>Spent</th>
+                            <th>Verified</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbUsers">
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Vehicle Modal -->
+<div class="modal-bg" id="addModal">
+    <div class="modal-box">
+        <h3><i class="fas fa-car" style="color:var(--sky-400);margin-right:8px;"></i>Add New Vehicle</h3>
+        <div class="mf-group"><label class="form-label">Name</label><input class="form-input" id="avName"
+                placeholder="e.g. Toyota Fortuner"></div>
+        <div class="mf-group"><label class="form-label">Type</label>
+            <select class="form-input" id="avType">
+                <option value="car">Car</option>
+                <option value="bike">Bike</option>
+            </select>
+        </div>
+        <div class="mf-group"><label class="form-label">Price per Day (₹)</label><input class="form-input" type="number"
+                id="avPrice" placeholder="e.g. 1500"></div>
+        <div class="mf-group"><label class="form-label">Location</label><input class="form-input" id="avLocation"
+                placeholder="e.g. Mumbai"></div>
+        <div class="mf-group"><label class="form-label">Image URL</label><input class="form-input" id="avImage"
+                placeholder="https://images.unsplash.com/..."></div>
+        <div class="modal-actions">
+            <button class="btn-modal-cancel" onclick="adminApp.closeModal()">Cancel</button>
+            <button class="btn-modal-save" onclick="adminApp.saveVehicle()"><i class="fas fa-save"></i> Save
+                Vehicle</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

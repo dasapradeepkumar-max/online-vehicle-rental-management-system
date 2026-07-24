@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+{% block title %}My Bookings — VehicleHub{% endblock %}
+{% block nav_mybookings %}active{% endblock %}
+
+{% block head %}
+<style>
+    .mybookings-page {
+        padding: 40px 0 80px;
+        flex: 1;
+    }
+
+    .mb-wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 clamp(16px, 3vw, 32px);
+    }
+
+    /* Page header */
+    .mb-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .mb-header h1 {
+        font-size: 28px;
+        font-weight: 800;
+        color: white;
+    }
+
+    .mb-header p {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    /* Stats */
+    .mb-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .mb-stat {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: all var(--trans-fast);
+    }
+
+    .mb-stat:hover {
+        border-color: var(--border-mid);
+    }
+
+    .ms-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .ms-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+        font-weight: 500;
+    }
+
+    .ms-value {
+        font-size: 22px;
+        font-weight: 800;
+        color: white;
+    }
+
+    /* Filter tabs */
+    .mb-filter-bar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .mf-tab {
+        padding: 8px 18px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all var(--trans-fast);
+    }
+
+    .mf-tab:hover {
+        border-color: var(--sky-500);
+        color: var(--sky-300);
+    }
+
+    .mf-tab.active {
+        background: var(--grad-primary);
+        border-color: transparent;
+        color: white;
+    }
+
+    /* Booking cards */
+    .booking-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 24px;
+        display: grid;
+        grid-template-columns: 90px 1fr auto;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 16px;
+        transition: all var(--trans-mid);
+    }
+
+    .booking-card:hover {
+        border-color: var(--border-mid);
+        box-shadow: var(--shadow-card);
+    }
+
+    .bc-img {
+        width: 90px;
+        height: 66px;
+        border-radius: var(--radius-md);
+        object-fit: cover;
+        display: block;
+    }
+
+    .bc-icon {
+        width: 90px;
+        height: 66px;
+        border-radius: var(--radius-md);
+        background: rgba(14, 165, 233, 0.06);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        color: rgba(14, 165, 233, 0.25);
+        flex-shrink: 0;
+    }
+
+    .bc-info {
+        min-width: 0;
+    }
+
+    .bc-name {
+        font-size: 17px;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .bc-dates {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .bc-dates i {
+        color: var(--sky-500);
+    }
+
+    .bc-tags {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .bc-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .bc-price {
+        font-size: 22px;
+        font-weight: 800;
+        color: white;
+    }
+
+    .bc-nights {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .btn-cancel-bk {
+        padding: 7px 16px;
+        border-radius: var(--radius-sm);
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #f87171;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--trans-fast);
+    }
+
+    .btn-cancel-bk:hover {
+        background: rgba(239, 68, 68, 0.18);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 24px;
+    }
+
+    .empty-state i {
+        font-size: 52px;
+        color: rgba(14, 165, 233, 0.15);
+        margin-bottom: 16px;
+        display: block;
+    }
+
+    .empty-state h3 {
+        font-size: 20px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin-bottom: 24px;
+    }
+
+    @media(max-width:700px) {
+        .mb-stats {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .booking-card {
+            grid-template-columns: 1fr;
+        }
+
+        .bc-right {
+            align-items: flex-start;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mybookings-page">
+    <div class="mb-wrap">
+        <div class="mb-header">
+            <div>
+                <h1>My Bookings</h1>
+                <p>Manage and track your vehicle rentals</p>
+            </div>
+            <a href="/vehicles" class="btn-primary">
+                <i class="fas fa-plus"></i> New Booking
+            </a>
+        </div>
+
+        <!-- Stats row -->
+        <div class="mb-stats">
+            <div class="mb-stat">
+                <div class="ms-icon" style="background:rgba(14,165,233,0.1);color:var(--sky-400);">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <div class="ms-label">Total</div>
+                    <div class="ms-value" id="mbTotal">—</div>
+                </div>
+            </div>
+            <div class="mb-stat">
+                <div class="ms-icon" style="background:rgba(16,185,129,0.1);color:#34d399;">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div>
+                    <div class="ms-label">Active</div>
+                    <div class="ms-value" id="mbActive">—</div>
+                </div>
+            </div>
+            <div class="mb-stat">
+                <div class="ms-icon" style="background:rgba(245,158,11,0.1);color:#fbbf24;">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <div class="ms-label">Upcoming</div>
+                    <div class="ms-value" id="mbUpcoming">—</div>
+                </div>
+            </div>
+            <div class="mb-stat">
+                <div class="ms-icon" style="background:rgba(139,92,246,0.1);color:#a78bfa;">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+                <div>
+                    <div class="ms-label">Total Spent</div>
+                    <div class="ms-value" id="mbSpent">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="mb-filter-bar">
+            <button class="mf-tab active" onclick="bookingsApp.filter('all',this)">All</button>
+            <button class="mf-tab" onclick="bookingsApp.filter('Active',this)">Active</button>
+            <button class="mf-tab" onclick="bookingsApp.filter('Upcoming',this)">Upcoming</button>
+            <button class="mf-tab" onclick="bookingsApp.filter('Completed',this)">Completed</button>
+            <button class="mf-tab" onclick="bookingsApp.filter('Cancelled',this)">Cancelled</button>
+        </div>
+
+        <!-- Bookings container -->
+        <div id="bookingsContainer">
+            <div class="skel" style="height:120px;border-radius:20px;margin-bottom:16px;"></div>
+            <div class="skel" style="height:120px;border-radius:20px;margin-bottom:16px;"></div>
+            <div class="skel" style="height:120px;border-radius:20px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/mybookings.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,159 @@
+/* Global theme for startup‑level vehicle rental system */
+
+/* Color palette */
+:root {
+    --color-primary: #2563eb;
+    --color-dark: #1e293b;
+    --color-light: #f8fafc;
+    --color-accent: #f59e0b;
+    --color-white: #ffffff;
+    --color-black: #000000;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--color-light);
+    color: var(--color-dark);
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+a {
+    transition: color 0.3s ease;
+}
+
+/* glassmorphism navbar */
+.navbar {
+    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.2) !important;
+    transition: background 0.3s ease;
+}
+
+.navbar.sticky {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* gradient hero */
+.hero-gradient {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-gradient h1 {
+    font-size: 3rem;
+    font-weight: 800;
+}
+
+/* animated buttons */
+.btn-primary, .btn-success, .btn-accent {
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover, .btn-success:hover, .btn-accent:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+/* gradient CTA button */
+.btn-cta {
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    color: #fff;
+}
+
+.btn-cta:hover {
+    background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+}
+
+/* floating labels */
+.form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.form-group input {
+    border-radius: 12px;
+    padding: 1rem 0.75rem 0.25rem;
+}
+
+.form-group label {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    color: #6b7280;
+}
+
+.form-group input:focus + label,
+.form-group input:not(:placeholder-shown) + label {
+    top: -0.5rem;
+    left: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    background: var(--color-light);
+    padding: 0 0.25rem;
+}
+
+/* card styles */
+.card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.vehicle-card img {
+    transition: transform 0.3s ease;
+}
+.vehicle-card:hover img {
+    transform: scale(1.05);
+}
+
+.price-badge, .available-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* status badges */
+.badge-active { background: #22c55e; }
+.badge-pending { background: #fbbf24; }
+.badge-cancelled { background: #ef4444; }
+
+/* utilities */
+.text-primary { color: var(--color-primary) !important; }
+.text-accent { color: var(--color-accent) !important; }
+
+/* sidebar links */
+nav ul li a {
+    display: block;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+nav ul li a:hover {
+    background: rgba(37,99,235,0.1);
+}
+
+/* smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* loader */
+.loader {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid var(--color-primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

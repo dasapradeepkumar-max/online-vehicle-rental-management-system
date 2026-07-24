@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — VehicleHub{% endblock %}
+{% block nav_dash %}active{% endblock %}
+
+{% block head %}
+<style>
+    .dash-page {
+        padding: 40px 0 80px;
+        flex: 1;
+    }
+
+    .dash-wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 clamp(16px, 3vw, 32px);
+    }
+
+    /* Welcome */
+    .dash-welcome {
+        margin-bottom: 32px;
+    }
+
+    .dash-welcome h1 {
+        font-size: 26px;
+        font-weight: 800;
+        color: white;
+    }
+
+    .dash-welcome p {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    /* KPI Grid */
+    .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 22px;
+        position: relative;
+        overflow: hidden;
+        transition: all var(--trans-mid);
+    }
+
+    .kpi-card:hover {
+        border-color: var(--border-mid);
+        transform: translateY(-2px);
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+    }
+
+    .kpi-card.sky::before {
+        background: var(--grad-accent);
+    }
+
+    .kpi-card.green::before {
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .kpi-card.amber::before {
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .kpi-card.purple::before {
+        background: linear-gradient(90deg, #8b5cf6, #6d28d9);
+    }
+
+    .kpi-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .kpi-label i {
+        font-size: 16px;
+        opacity: 0.4;
+    }
+
+    .kpi-value {
+        font-size: 30px;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 4px;
+    }
+
+    .kpi-sub {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    /* Two-col layout */
+    .dash-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 20px;
+    }
+
+    .dash-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .dc-head {
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .dc-head h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .dc-head a {
+        font-size: 13px;
+        color: var(--sky-400);
+        text-decoration: none;
+    }
+
+    .dc-head a:hover {
+        text-decoration: underline;
+    }
+
+    .dc-body {
+        padding: 20px 24px;
+    }
+
+    /* Quick nav cards */
+    .qnav-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .qnav-card {
+        padding: 18px;
+        border-radius: var(--radius-md);
+        background: rgba(14, 165, 233, 0.05);
+        border: 1px solid var(--border);
+        text-decoration: none;
+        transition: all var(--trans-fast);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .qnav-card:hover {
+        border-color: var(--sky-500);
+        background: rgba(14, 165, 233, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .qnav-icon {
+        font-size: 20px;
+    }
+
+    .qnav-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .qnav-sub {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    /* Booking list */
+    .bk-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .bk-row:last-child {
+        border-bottom: none;
+    }
+
+    .bk-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .bk-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .bk-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .bk-date {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .bk-amount {
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+        white-space: nowrap;
+    }
+
+    @media(max-width:900px) {
+        .kpi-row {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .dash-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media(max-width:500px) {
+        .kpi-row {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .qnav-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-page">
+    <div class="dash-wrap">
+        <!-- Welcome -->
+        <div class="dash-welcome">
+            <h1 id="welcomeText">Welcome back 👋</h1>
+            <p>Here's a summary of your activity on VehicleHub</p>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-row">
+            <div class="kpi-card sky">
+                <div class="kpi-label">Active Rentals <i class="fas fa-car"></i></div>
+                <div class="kpi-value" id="dActiveRentals">—</div>
+                <div class="kpi-sub">Currently renting</div>
+            </div>
+            <div class="kpi-card green">
+                <div class="kpi-label">Upcoming <i class="fas fa-calendar"></i></div>
+                <div class="kpi-value" id="dUpcoming">—</div>
+                <div class="kpi-sub">Scheduled trips</div>
+            </div>
+            <div class="kpi-card purple">
+                <div class="kpi-label">Total Spent <i class="fas fa-rupee-sign"></i></div>
+                <div class="kpi-value" id="dSpent">—</div>
+                <div class="kpi-sub">All time</div>
+            </div>
+            <div class="kpi-card amber">
+                <div class="kpi-label">Available Now <i class="fas fa-check-circle"></i></div>
+                <div class="kpi-value" id="dAvailVehicles">—</div>
+                <div class="kpi-sub" style="display:flex;align-items:center;gap:4px;">
+                    <span class="pulse-dot"></span> Live
+                </div>
+            </div>
+        </div>
+
+        <!-- Main grid -->
+        <div class="dash-grid">
+            <!-- Recent bookings -->
+            <div class="dash-card">
+                <div class="dc-head">
+                    <h3>Recent Bookings</h3>
+                    <a href="/mybookings">View all →</a>
+                </div>
+                <div class="dc-body">
+                    <div id="recentBookingsList">
+                        <div class="skel" style="height:50px;margin-bottom:12px;"></div>
+                        <div class="skel" style="height:50px;margin-bottom:12px;"></div>
+                        <div class="skel" style="height:50px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick access -->
+            <div>
+                <div class="dash-card" style="margin-bottom:20px;">
+                    <div class="dc-head">
+                        <h3>Quick Access</h3>
+                    </div>
+                    <div class="dc-body">
+                        <div class="qnav-grid">
+                            <a href="/vehicles" class="qnav-card">
+                                <span class="qnav-icon" style="color:var(--sky-400);">🚗</span>
+                                <span class="qnav-title">Book a Vehicle</span>
+                                <span class="qnav-sub">Browse our fleet</span>
+                            </a>
+                            <a href="/mybookings" class="qnav-card">
+                                <span class="qnav-icon" style="color:#34d399;">📋</span>
+                                <span class="qnav-title">My Bookings</span>
+                                <span class="qnav-sub">Manage your trips</span>
+                            </a>
+                            <a href="/vehicles?type=car" class="qnav-card">
+                                <span class="qnav-icon" style="color:#fbbf24;">🏎️</span>
+                                <span class="qnav-title">Browse Cars</span>
+                                <span class="qnav-sub">Sedans & SUVs</span>
+                            </a>
+                            <a href="/vehicles?type=bike" class="qnav-card">
+                                <span class="qnav-icon" style="color:#a78bfa;">🏍️</span>
+                                <span class="qnav-title">Browse Bikes</span>
+                                <span class="qnav-sub">Sports & cruisers</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live stats mini -->
+                <div class="dash-card">
+                    <div class="dc-head">
+                        <h3>Live Platform Stats</h3>
+                        <div class="live-pill"><span class="pulse-dot"></span> Live</div>
+                    </div>
+                    <div class="dc-body" style="display:flex;flex-direction:column;gap:14px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:13px;color:var(--text-secondary);">Total Vehicles</span>
+                            <span style="font-size:16px;font-weight:700;color:white;" id="lTotalV">—</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:13px;color:var(--text-secondary);">Available Now</span>
+                            <span style="font-size:16px;font-weight:700;color:#34d399;" id="lAvailV">—</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:13px;color:var(--text-secondary);">Active Rentals</span>
+                            <span style="font-size:16px;font-weight:700;color:var(--sky-400);" id="lActiveR">—</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:13px;color:var(--text-secondary);">Registered Users</span>
+                            <span style="font-size:16px;font-weight:700;color:#a78bfa;" id="lUsers">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
