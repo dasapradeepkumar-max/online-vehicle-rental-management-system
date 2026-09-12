@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'devsecret')
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'vehiclehub-development-secret-key-32chars')
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SMTP_HOST = os.environ.get('SMTP_HOST', 'smtp.gmail.com')

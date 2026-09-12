@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 from models import db, Booking, Vehicle, User
-from datetime import datetime, date
+from datetime import datetime, date, time, timedelta
 import jwt
 from config import Config
 from functools import wraps
@@ -78,15 +78,19 @@ def api_create_booking():
 
         start_date = datetime.strptime(start_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_str, '%Y-%m-%d').date()
+        pickup_time = _parse_datetime(data.get('pickup_time'), start_date)
+        return_time = _parse_datetime(data.get('return_time'), end_date)
 
         if start_date >= end_date:
             return jsonify({'message': 'end_date must be after start_date'}), 400
         if start_date < date.today():
             return jsonify({'message': 'start_date cannot be in the past'}), 400
 
-        vehicle = Vehicle.query.get(vehicle_id)
+        vehicle = Vehicle.query.filter_by(id=vehicle_id).with_for_update().first()
         if not vehicle:
             return jsonify({'message': 'Vehicle not found'}), 404
+        if vehicle.status != 'available':
+            return jsonify({'message': 'Vehicle is not currently available'}), 409
 
         # Check overlapping confirmed bookings
         overlap = Booking.query.filter(
@@ -108,7 +112,11 @@ def api_create_booking():
             start_date=start_date,
             end_date=end_date,
             total_price=total_price,
-            status='Confirmed'
+            status='Confirmed',
+            pickup_time=pickup_time,
+            return_time=return_time,
+            payment_status='Paid',
+            payment_reference=(data.get('payment_reference') or '').strip() or None
         )
         db.session.add(booking)
         db.session.commit()
@@ -125,13 +133,13 @@ def api_create_booking():
                 'end_date': end_str,
                 'timestamp': datetime.now().isoformat()
             }
-            socketio.emit('new_booking', booking_data, broadcast=True)
-            socketio.emit('booking_confirmed', booking_data, broadcast=True)
+            socketio.emit('new_booking', booking_data)
+            socketio.emit('booking_confirmed', booking_data)
             socketio.emit('vehicle_status_update', {
                 'vehicle_id': vehicle_id,
                 'status': 'booked',
                 'available_count': Vehicle.query.filter_by(status='available').count()
-            }, broadcast=True)
+            })
         except Exception as e:
             print(f'[WARNING] Socket emit failed: {e}')
 
@@ -164,6 +172,15 @@ def api_create_booking():
         return jsonify({'message': 'Failed to create booking'}), 500
 
 
+def _parse_datetime(value, rental_date):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(f'{rental_date.isoformat()}T{value}')
+    except ValueError:
+        raise ValueError('Invalid pickup or return time')
+
+
 # ─── API: My bookings ─────────────────────────────────────────────────────────
 
 @bookings_bp.route('/api/bookings/my', methods=['GET'])
@@ -193,6 +210,11 @@ def api_my_bookings():
                 'total_price': b.total_price,
                 'days': (b.end_date - b.start_date).days,
                 'status': status,
+                'pickup_time': b.pickup_time.isoformat() if b.pickup_time else None,
+                'cancellation_fee': b.cancellation_fee or 0,
+                'refund_amount': b.refund_amount or 0,
+                'refund_status': b.refund_status or 'Not applicable',
+                'payment_status': b.payment_status or 'Paid',
                 'created_at': b.created_at.isoformat() if b.created_at else ''
             })
         return jsonify(result)
@@ -212,20 +234,32 @@ def api_cancel_booking(booking_id):
             return jsonify({'message': 'Unauthorized'}), 403
         if booking.status == 'Cancelled':
             return jsonify({'message': 'Booking already cancelled'}), 400
-        # Can only cancel upcoming bookings
-        if booking.start_date <= date.today():
-            return jsonify({'message': 'Cannot cancel an active or past booking'}), 400
+        pickup_at = booking.pickup_time or datetime.combine(booking.start_date, time.min)
+        now = datetime.utcnow()
+        if now >= pickup_at:
+            return jsonify({'message': 'Cannot cancel after the pickup/booking start time'}), 400
+        if pickup_at - now < timedelta(hours=24):
+            return jsonify({'message': 'Cancellation is allowed only at least 24 hours before pickup'}), 400
 
-        # Calculate optional cancellation fee
-        days_until_start = (booking.start_date - date.today()).days
-        fee = 0.0
-        if days_until_start <= 2:
-            fee = booking.total_price * 0.10  # 10% fee if cancelled within 48 hours
-        refund_amount = booking.total_price - fee
+        fee = round(booking.total_price * 0.10, 2)
+        refund_amount = round(booking.total_price - fee, 2)
 
         booking.status = 'Cancelled'
-        # Free up the vehicle
-        if booking.vehicle:
+        booking.cancellation_reason = (request.get_json(silent=True) or {}).get('reason') or 'Cancelled by user'
+        booking.cancellation_fee = fee
+        booking.refund_amount = refund_amount
+        booking.refund_status = 'Processed'
+        booking.payment_status = 'Refunded'
+        booking.cancelled_at = now
+        # Free the vehicle only when no other confirmed rental is active today.
+        replacement_booking = Booking.query.filter(
+            Booking.id != booking.id,
+            Booking.vehicle_id == booking.vehicle_id,
+            Booking.start_date <= date.today(),
+            Booking.end_date >= date.today(),
+            Booking.status == 'Confirmed'
+        ).first()
+        if booking.vehicle and not replacement_booking:
             booking.vehicle.status = 'available'
             
         db.session.commit()
@@ -236,25 +270,29 @@ def api_cancel_booking(booking_id):
                 'booking_id': booking_id,
                 'vehicle_id': booking.vehicle_id,
                 'customer_name': current_user.full_name
-            }, broadcast=True)
+            })
             socketio.emit('vehicle_status_update', {
                 'vehicle_id': booking.vehicle_id,
                 'status': 'available'
-            }, broadcast=True)
+            })
             # Add general activity for admin feed
             socketio.emit('activity_update', {
                 'type': 'cancellation',
                 'title': 'Booking Cancelled',
                 'msg': f'{current_user.full_name} cancelled booking #BK-{booking_id}',
                 'timestamp': datetime.now().isoformat()
-            }, broadcast=True)
+            })
         except Exception:
             pass
 
         return jsonify({
             'message': 'Booking cancelled successfully',
             'fee': fee,
-            'refund': refund_amount
+            'refund': refund_amount,
+            'cancellation_fee': fee,
+            'refund_amount': refund_amount,
+            'refund_status': booking.refund_status,
+            'booking_status': booking.status
         })
     except Exception as e:
         print(f'[ERROR] api_cancel_booking: {e}')

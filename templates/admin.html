@@ -335,6 +335,7 @@
     .modal-bg.open {
         display: flex;
     }
+    .table-wrap { overflow-x: auto; }
 
     .modal-box {
         background: var(--bg-card2);
@@ -508,6 +509,21 @@
                 <div class="akpi-val" id="akVehicles">0</div>
                 <div class="akpi-sub" id="akVSub">Available: 0</div>
             </div>
+            <div class="akpi-card c1">
+                <div class="akpi-lbl">Payments <i class="fas fa-credit-card"></i></div>
+                <div class="akpi-val" id="akPayments">₹0</div>
+                <div class="akpi-sub">Collected bookings</div>
+            </div>
+            <div class="akpi-card c3">
+                <div class="akpi-lbl">Cancellations <i class="fas fa-ban"></i></div>
+                <div class="akpi-val" id="akCancellations">0</div>
+                <div class="akpi-sub">All time</div>
+            </div>
+            <div class="akpi-card c4">
+                <div class="akpi-lbl">Refunds <i class="fas fa-undo"></i></div>
+                <div class="akpi-val" id="akRefunds">₹0</div>
+                <div class="akpi-sub" id="akRefundFees">Fees retained: ₹0</div>
+            </div>
         </div>
 
         <div class="ag2">
@@ -643,28 +659,59 @@
     <div id="tab-users" class="admin-content" style="display:none;">
         <h2 style="font-size:20px;font-weight:800;color:white;margin-bottom:20px;">Registered Users</h2>
         <div class="a-card">
+            <div class="a-card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+                <input class="form-input" id="userSearch" placeholder="Search ID, name, email, phone">
+                <select class="form-input" id="userBookings"><option value="all">All booking activity</option><option value="with">With bookings</option><option value="without">Without bookings</option></select>
+                <select class="form-input" id="userLoginActivity"><option value="all">All login activity</option><option value="active">Has logged in</option><option value="inactive">Never logged in</option></select>
+                <select class="form-input" id="userBookingStatus"><option value="all">Any booking status</option><option>Confirmed</option><option>Completed</option><option>Cancelled</option></select>
+                <select class="form-input" id="userIssueStatus"><option value="all">Any issue status</option><option>None</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Closed</option></select>
+                <select class="form-input" id="userPaymentStatus"><option value="all">Any payment status</option><option>Paid</option><option>Pending</option><option>Failed</option><option>Refunded</option></select>
+                <select class="form-input" id="userRentalStatus"><option value="all">Any rental status</option><option>Upcoming</option><option>Active</option><option>Completed</option><option>Cancelled</option></select>
+                <input class="form-input" type="date" id="userCreatedFrom" title="Account created from" aria-label="Account created from">
+                <input class="form-input" type="date" id="userCreatedTo" title="Account created to" aria-label="Account created to">
+                <input class="form-input" type="date" id="userBookingFrom" title="Rental starts from" aria-label="Rental starts from">
+                <input class="form-input" type="date" id="userBookingTo" title="Rental ends by" aria-label="Rental ends by">
+                <select class="form-input" id="userSort"><option value="created_desc">Newest first</option><option value="created_asc">Oldest first</option><option value="name_asc">Name A-Z</option><option value="bookings_desc">Most bookings</option><option value="logins_desc">Most logins</option><option value="last_login_desc">Recent login</option></select>
+                <button class="btn-reset-sb" onclick="adminApp.resetUserFilters()"><i class="fas fa-undo"></i> Reset</button>
+            </div>
             <div class="a-card-body">
                 <table class="adt">
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th>User ID</th>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Phone</th>
+                            <th>Created</th>
                             <th>Bookings</th>
-                            <th>Spent</th>
-                            <th>Verified</th>
+                            <th>Logins</th>
+                            <th>Last login</th>
+                            <th>Issues</th>
                         </tr>
                     </thead>
                     <tbody id="tbUsers">
                         <tr>
-                            <td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...
+                            <td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- User tracking detail modal -->
+<div class="modal-bg" id="userDetailModal">
+    <div class="modal-box" style="max-width:1100px;width:94%;max-height:88vh;overflow:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <h3 id="userDetailTitle"><i class="fas fa-user-clock" style="color:var(--sky-400);margin-right:8px;"></i>User history</h3>
+            <button class="btn-modal-cancel" onclick="adminApp.closeUserDetail()" aria-label="Close user history"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="userDetailSummary" style="margin:16px 0;color:var(--text-muted);"></div>
+        <h4>Login history</h4><div class="table-wrap"><table class="adt"><thead><tr><th>Time</th><th>IP</th><th>Device</th></tr></thead><tbody id="userLogins"></tbody></table></div>
+        <h4 style="margin-top:22px;">Rental history</h4><div class="table-wrap"><table class="adt"><thead><tr><th>Vehicle</th><th>Booking / pickup / return</th><th>Days</th><th>Payment</th><th>Booking</th><th>Rental</th><th>Cancellation / refund</th></tr></thead><tbody id="userRentals"></tbody></table></div>
+        <h4 style="margin-top:22px;">Issues</h4><div class="table-wrap"><table class="adt"><thead><tr><th>Description</th><th>Time</th><th>Status</th><th>Admin response</th></tr></thead><tbody id="userIssues"></tbody></table></div>
     </div>
 </div>
 

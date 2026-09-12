@@ -10,6 +10,14 @@ class BookingsApp {
         this.init();
     }
 
+    isVisibleBooking(booking) {
+        return !['Completed', 'Cancelled'].includes(booking.status);
+    }
+
+    getVisibleBookings() {
+        return this.all;
+    }
+
     async init() {
         await this.load();
         this.setupSocket();
@@ -45,9 +53,10 @@ class BookingsApp {
     render() {
         this.renderStats();
 
+        const visibleBookings = this.getVisibleBookings();
         const list = this.currentFilter === 'all'
-            ? this.all
-            : this.all.filter(b => b.status === this.currentFilter);
+            ? visibleBookings
+            : visibleBookings.filter(b => b.status === this.currentFilter);
 
         const container = document.getElementById('bookingsContainer');
         if (!container) return;
@@ -69,11 +78,12 @@ class BookingsApp {
     }
 
     renderStats() {
-        const active = this.all.filter(b => b.status === 'Active').length;
-        const upcoming = this.all.filter(b => b.status === 'Upcoming').length;
+        const visibleBookings = this.getVisibleBookings();
+        const active = visibleBookings.filter(b => b.status === 'Active').length;
+        const upcoming = visibleBookings.filter(b => b.status === 'Upcoming').length;
         const spent = this.all.filter(b => b.status !== 'Cancelled').reduce((s, b) => s + (b.total_price || 0), 0);
 
-        document.getElementById('mbTotal').textContent = this.all.length;
+        document.getElementById('mbTotal').textContent = visibleBookings.length;
         document.getElementById('mbActive').textContent = active;
         document.getElementById('mbUpcoming').textContent = upcoming;
         document.getElementById('mbSpent').textContent = `₹${spent.toLocaleString('en-IN')}`;
@@ -82,7 +92,7 @@ class BookingsApp {
     bookingCard(b) {
         const typeIcon = b.vehicle_type === 'bike' ? 'fa-motorcycle' : 'fa-car';
         const statusClass = `badge-${b.status.toLowerCase()}`;
-        const canCancel = b.status === 'Upcoming' || b.status === 'Confirmed';
+        const canCancel = b.status === 'Active' || b.status === 'Upcoming' || b.status === 'Confirmed';
 
         const start = new Date(b.start_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
         const end = new Date(b.end_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -111,6 +121,11 @@ class BookingsApp {
             <span class="badge badge-car" style="opacity:0.6;">${b.vehicle_type}</span>
             <span style="font-size:11px;color:var(--text-muted);margin-left:4px;">#BK-${b.id}</span>
           </div>
+                    ${b.status === 'Cancelled' ? `<div style="font-size:12px;color:var(--text-secondary);margin-top:10px;">
+                        Cancellation fee: <strong>₹${(b.cancellation_fee || 0).toFixed(2)}</strong> ·
+                        Refund: <strong>₹${(b.refund_amount || 0).toFixed(2)}</strong> ·
+                        Refund status: <strong>${b.refund_status || 'Pending'}</strong>
+                    </div>` : `<div style="font-size:12px;color:var(--text-muted);margin-top:10px;">Payment: ${b.payment_status || 'Paid'}</div>`}
         </div>
         <div class="bc-right">
           <div class="bc-price">₹${(b.total_price || 0).toLocaleString('en-IN')}</div>
@@ -162,6 +177,7 @@ class BookingsApp {
     setupSocket() {
         this.socket.on('booking_confirmed', () => this.load());
         this.socket.on('booking_cancelled', () => this.load());
+        this.socket.on('booking_status_update', () => this.load());
         this.socket.on('vehicle_status_update', () => this.load());
     }
 }

@@ -3,7 +3,8 @@ from flask_login import LoginManager
 from flask_socketio import SocketIO
 
 from config import Config
-from models import db, User
+from models import db, User, Vehicle
+from sqlalchemy import inspect, text
 
 # blueprints
 from routes.auth import auth_bp
@@ -28,13 +29,19 @@ def load_user(user_id):
 
 def create_tables():
     db.create_all()
+    _upgrade_tracking_schema()
+
     # Create admin user if not exists
-    if not User.query.filter_by(email='admin@vehiclehub.local').first():
+    admin = User.query.filter_by(email='admin@vehiclehub.local').first()
+    if not admin:
         admin = User(full_name='Administrator', email='admin@vehiclehub.local', phone='', is_admin=True, is_verified=True)
         db.session.add(admin)
+        db.session.flush()
+        admin.user_code = 'ADMIN001'
+    elif admin.user_code and admin.user_code.startswith('USR'):
+        admin.user_code = f'ADMIN{admin.id:03d}'
 
     # Add sample vehicles if none exist
-    from models import Vehicle
     if Vehicle.query.count() == 0:
         sample_vehicles = [
             # Cars
@@ -113,7 +120,55 @@ def create_tables():
         for v_data in sample_vehicles:
             db.session.add(Vehicle(**v_data))
 
+    db.session.flush()
+    for user in User.query.filter(User.user_code.is_(None)).all():
+        user.user_code = User.next_user_code() if not user.is_admin else f'ADMIN{user.id:03d}'
+    for vehicle in Vehicle.query.filter(Vehicle.vehicle_number.is_(None)).all():
+        vehicle.vehicle_number = f'VH-{vehicle.id:04d}'
     db.session.commit()
+
+
+def _upgrade_tracking_schema():
+    """Add tracking columns to existing SQLite installs without a migration dependency."""
+    inspector = inspect(db.engine)
+    additions = {
+        'user': {
+            'user_code': 'VARCHAR(20)',
+        },
+        'vehicle': {
+            'vehicle_number': 'VARCHAR(30)',
+        },
+        'booking': {
+            'pickup_time': 'DATETIME',
+            'return_time': 'DATETIME',
+            'payment_status': "VARCHAR(20) DEFAULT 'Paid'",
+            'payment_reference': 'VARCHAR(100)',
+            'cancellation_reason': 'VARCHAR(255)',
+            'cancellation_fee': 'FLOAT DEFAULT 0',
+            'refund_amount': 'FLOAT DEFAULT 0',
+            'refund_status': "VARCHAR(20) DEFAULT 'Not applicable'",
+            'cancelled_at': 'DATETIME',
+        },
+    }
+    for table, columns in additions.items():
+        existing = {column['name'] for column in inspector.get_columns(table)}
+        for name, definition in columns.items():
+            if name not in existing:
+                db.session.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {definition}'))
+    index_definitions = [
+        ('user', 'ix_user_user_code', 'CREATE UNIQUE INDEX ix_user_user_code ON user (user_code)'),
+        ('vehicle', 'ix_vehicle_vehicle_number', 'CREATE UNIQUE INDEX ix_vehicle_vehicle_number ON vehicle (vehicle_number)'),
+        ('booking', 'ix_booking_user_status', 'CREATE INDEX ix_booking_user_status ON booking (user_id, status)'),
+        ('booking', 'ix_booking_vehicle_dates', 'CREATE INDEX ix_booking_vehicle_dates ON booking (vehicle_id, start_date, end_date)'),
+        ('booking', 'ix_booking_payment_status', 'CREATE INDEX ix_booking_payment_status ON booking (payment_status)'),
+    ]
+    existing_indexes = {
+        table: {index['name'] for index in inspect(db.engine).get_indexes(table)}
+        for table in ('user', 'vehicle', 'booking')
+    }
+    for table, name, statement in index_definitions:
+        if name not in existing_indexes[table]:
+            db.session.execute(text(statement))
 
 
 # register blueprints
@@ -143,13 +198,13 @@ def handle_user_online(data):
     user_id = data.get('user_id')
     if user_id:
         active_users[str(user_id)] = True
-    socketio.emit('user_activity', {'count': len(active_users)}, broadcast=True)
+    socketio.emit('user_activity', {'count': len(active_users)})
 
 @socketio.on('user_offline')
 def handle_user_offline(data):
     user_id = str(data.get('user_id', ''))
     active_users.pop(user_id, None)
-    socketio.emit('user_activity', {'count': len(active_users)}, broadcast=True)
+    socketio.emit('user_activity', {'count': len(active_users)})
 
 
 if __name__ == '__main__':

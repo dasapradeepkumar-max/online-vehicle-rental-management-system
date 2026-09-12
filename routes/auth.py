@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from models import db, User, OTP
+from models import db, User, OTP, LoginEvent
 from flask_login import login_user, logout_user, login_required, current_user
 from services.otp_service import generate_otp, send_email_otp, verify_otp
 from functools import wraps
@@ -87,6 +87,8 @@ def api_send_otp():
                 # Auto-create user with email
                 user = User(email=identifier, full_name=identifier.split('@')[0])
                 db.session.add(user)
+                db.session.flush()
+                user.user_code = User.next_user_code()
                 db.session.commit()
         else:
             # Phone number
@@ -95,6 +97,8 @@ def api_send_otp():
                 # Auto-create user with phone
                 user = User(phone=identifier, full_name='User')
                 db.session.add(user)
+                db.session.flush()
+                user.user_code = User.next_user_code()
                 db.session.commit()
 
         # Generate OTP
@@ -177,6 +181,12 @@ def api_verify_otp():
 
         # Login user
         login_user(user)
+        db.session.add(LoginEvent(
+            user_id=user.id,
+            ip_address=request.remote_addr,
+            user_agent=request.user_agent.string[:255] if request.user_agent else None
+        ))
+        db.session.commit()
 
         # Generate JWT token (optional, for stateless auth)
         token = jwt.encode({
@@ -201,6 +211,7 @@ def api_verify_otp():
             'token': token,
             'user': {
                 'id': user.id,
+                'user_code': user.display_id,
                 'email': user.email or user.phone,
                 'name': user.full_name,
                 'is_admin': user.is_admin
@@ -252,6 +263,9 @@ def api_register():
             user.set_password(data['password'])
         if data.get('phone') and not user.phone:
             user.phone = data['phone']
+
+        if not user.user_code and not user.is_admin:
+            user.user_code = User.next_user_code()
         
         user.is_verified = True
         db.session.commit()
@@ -264,12 +278,12 @@ def api_register():
                 'title': 'New User Joined',
                 'msg': f'{user.full_name} ({user.email}) registered',
                 'timestamp': datetime.now().isoformat()
-            }, broadcast=True)
+            })
             socketio.emit('user_registered', {
                 'user_id': user.id,
                 'email': user.email,
                 'timestamp': datetime.now().isoformat()
-            }, broadcast=True)
+            })
         except:
             pass
         
@@ -398,6 +412,12 @@ def verify():
         user = User.query.get(uid)
         if user and verify_otp(user, code):
             login_user(user)
+            db.session.add(LoginEvent(
+                user_id=user.id,
+                ip_address=request.remote_addr,
+                user_agent=request.user_agent.string[:255] if request.user_agent else None
+            ))
+            db.session.commit()
             flash('Logged in via OTP', 'success')
             return redirect(url_for('auth.dashboard'))
         flash('Invalid or expired OTP', 'danger')

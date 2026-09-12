@@ -74,6 +74,7 @@ def api_list_vehicles():
             result.append({
                 'id': v.id,
                 'name': v.name,
+                'vehicle_number': v.vehicle_number or f'VH-{v.id:04d}',
                 'type': v.type,
                 'price_per_day': v.price_per_day,
                 'status': display_status,
@@ -107,6 +108,7 @@ def api_vehicle_detail(vehicle_id):
         return jsonify({
             'id': v.id,
             'name': v.name,
+            'vehicle_number': v.vehicle_number or f'VH-{v.id:04d}',
             'type': v.type,
             'price_per_day': v.price_per_day,
             'status': display_status,
@@ -144,7 +146,7 @@ def api_add_vehicle():
     db.session.commit()
     try:
         from app import socketio
-        socketio.emit('vehicle_added', {'id': v.id, 'name': v.name}, broadcast=True)
+        socketio.emit('vehicle_added', {'id': v.id, 'name': v.name})
     except Exception:
         pass
     return jsonify({'message': 'Vehicle added', 'id': v.id}), 201
@@ -164,7 +166,7 @@ def api_update_vehicle(vehicle_id):
     db.session.commit()
     try:
         from app import socketio
-        socketio.emit('vehicle_status_update', {'id': v.id, 'status': v.status}, broadcast=True)
+        socketio.emit('vehicle_status_update', {'id': v.id, 'status': v.status})
     except Exception:
         pass
     return jsonify({'message': 'Vehicle updated'})

@@ -9,6 +9,10 @@ class DashboardApp {
         this.init();
     }
 
+    isVisibleBooking(booking) {
+        return !['Completed', 'Cancelled'].includes(booking.status);
+    }
+
     async init() {
         await this.loadUser();
         await this.loadStats();
@@ -55,8 +59,9 @@ class DashboardApp {
             });
             if (res.ok) {
                 const bookings = await res.json();
-                const active = bookings.filter(b => b.status === 'Active').length;
-                const upcoming = bookings.filter(b => b.status === 'Upcoming').length;
+                const visibleBookings = bookings.filter(b => this.isVisibleBooking(b));
+                const active = visibleBookings.filter(b => b.status === 'Active').length;
+                const upcoming = visibleBookings.filter(b => b.status === 'Upcoming').length;
                 const spent = bookings.filter(b => b.status !== 'Cancelled').reduce((s, b) => s + (b.total_price || 0), 0);
 
                 document.getElementById('dActiveRentals').textContent = active;
@@ -76,7 +81,7 @@ class DashboardApp {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const bookings = await res.json();
-            const recent = bookings.slice(0, 4);
+            const recent = bookings.filter(b => this.isVisibleBooking(b)).slice(0, 4);
 
             if (recent.length === 0) {
                 list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">No recent bookings found.</div>`;
@@ -108,6 +113,14 @@ class DashboardApp {
     setupSocket() {
         this.socket.on('stats_update', () => this.loadStats());
         this.socket.on('booking_confirmed', () => {
+            this.loadStats();
+            this.loadRecent();
+        });
+        this.socket.on('booking_cancelled', () => {
+            this.loadStats();
+            this.loadRecent();
+        });
+        this.socket.on('booking_status_update', () => {
             this.loadStats();
             this.loadRecent();
         });

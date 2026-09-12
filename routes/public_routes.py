@@ -22,7 +22,7 @@ def get_vehicles():
                 Booking.vehicle_id == vehicle.id,
                 Booking.start_date <= today,
                 Booking.end_date >= today,
-                Booking.status == 'confirmed'
+                Booking.status == 'Confirmed'
             ).first()
             
             status = 'booked' if active_booking else 'available'
@@ -61,7 +61,7 @@ def get_stats():
         active_bookings = Booking.query.filter(
             Booking.start_date <= today,
             Booking.end_date >= today,
-            Booking.status == 'confirmed'
+            Booking.status == 'Confirmed'
         ).with_entities(Booking.vehicle_id).distinct().all()
         
         booked_vehicle_ids = [b.vehicle_id for b in active_bookings]
@@ -73,7 +73,7 @@ def get_stats():
         active_rentals = Booking.query.filter(
             Booking.start_date <= today,
             Booking.end_date >= today,
-            Booking.status == 'confirmed'
+            Booking.status == 'Confirmed'
         ).count()
         
         # Total users
@@ -111,7 +111,7 @@ def get_vehicle_details(vehicle_id):
             Booking.vehicle_id == vehicle_id,
             Booking.start_date <= today,
             Booking.end_date >= today,
-            Booking.status == 'confirmed'
+            Booking.status == 'Confirmed'
         ).first()
         
         status = 'booked' if active_booking else 'available'
@@ -146,13 +146,22 @@ def check_availability(vehicle_id):
         
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+        if vehicle.status != 'available':
+            return jsonify({
+                'vehicle_id': vehicle_id,
+                'start_date': start_date_str,
+                'end_date': end_date_str,
+                'available': False
+            })
         
         # Check for overlapping bookings
         conflicting_booking = Booking.query.filter(
             Booking.vehicle_id == vehicle_id,
             Booking.start_date <= end_date,
             Booking.end_date >= start_date,
-            Booking.status == 'confirmed'
+            Booking.status == 'Confirmed'
         ).first()
         
         available = conflicting_booking is None

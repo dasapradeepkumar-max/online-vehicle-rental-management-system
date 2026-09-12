@@ -8,7 +8,7 @@ class VehiclePage {
     this.filteredVehicles = [];
     this.filters = {
       type: 'all',
-      avail: 'all',
+      avail: 'available',
       maxPrice: 5000,
       search: '',
       location: ''
@@ -64,6 +64,7 @@ class VehiclePage {
     this.filters.location = lInput ? lInput.value.toLowerCase() : '';
 
     this.filteredVehicles = this.allVehicles.filter(v => {
+      if (v.status !== 'available') return false;
       if (this.filters.type !== 'all' && v.type !== this.filters.type) return false;
       if (this.filters.avail === 'available' && v.status !== 'available') return false;
       if (v.price_per_day > this.filters.maxPrice) return false;
@@ -76,7 +77,7 @@ class VehiclePage {
   }
 
   resetFilters() {
-    this.filters = { type: 'all', avail: 'all', maxPrice: 5000, search: '', location: '' };
+    this.filters = { type: 'all', avail: 'available', maxPrice: 5000, search: '', location: '' };
 
     const sInput = document.getElementById('searchInput');
     const lInput = document.getElementById('locationFilter');

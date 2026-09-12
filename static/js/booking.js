@@ -168,6 +168,8 @@ class BookingApp {
         const btn = document.getElementById('confirmBtn');
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
+        const pickupTime = document.getElementById('pickupTime').value;
+        const returnTime = document.getElementById('returnTime').value;
 
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
@@ -184,7 +186,9 @@ class BookingApp {
                 body: JSON.stringify({
                     vehicle_id: parseInt(this.vehicleId),
                     start_date: start,
-                    end_date: end
+                    end_date: end,
+                    pickup_time: pickupTime,
+                    return_time: returnTime
                 })
             });
 

@@ -3,8 +3,9 @@ import urllib.parse
 import urllib.error
 import datetime
 import json
+import os
 
-BASE_URL = "http://localhost:5000"
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:5000")
 
 def post_json(url, data=None, headers=None):
     if headers is None: headers = {}
@@ -62,15 +63,17 @@ def run_test():
     # 3. Create a booking for a vehicle
     # Let's get vehicle ID 1
     today = datetime.date.today()
-    # Book for today+1 to today+3
-    start_date = (today + datetime.timedelta(days=1)).isoformat()
-    end_date = (today + datetime.timedelta(days=3)).isoformat()
+    # Use a future pickup safely beyond the 24-hour cancellation cutoff.
+    start_date = (today + datetime.timedelta(days=30)).isoformat()
+    end_date = (today + datetime.timedelta(days=32)).isoformat()
     
     print(f"Creating booking for Vehicle ID 1 from {start_date} to {end_date}...")
     status, res = post_json(f"{BASE_URL}/api/bookings", headers=headers, data={
         "vehicle_id": 1,
         "start_date": start_date,
-        "end_date": end_date
+        "end_date": end_date,
+        "pickup_time": "12:00",
+        "return_time": "18:00"
     })
     
     if status != 201:

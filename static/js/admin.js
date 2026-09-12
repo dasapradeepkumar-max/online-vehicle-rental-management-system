@@ -15,6 +15,7 @@ class AdminApp {
         await this.loadVehicles();
         await this.loadBookings();
         await this.loadUsers();
+        this.bindUserFilters();
         this.setupSocket();
     }
 
@@ -52,6 +53,10 @@ class AdminApp {
         set('akUsers', s.total_users || 0);
         set('akVehicles', s.total_vehicles || 0);
         set('akVSub', `Available: ${s.available_vehicles || 0}`);
+        set('akPayments', `₹${(s.total_payments || 0).toLocaleString('en-IN')}`);
+        set('akCancellations', s.total_cancellations || 0);
+        set('akRefunds', `₹${(s.total_refunds || 0).toLocaleString('en-IN')}`);
+        set('akRefundFees', `Fees retained: ₹${(s.total_cancellation_fees || 0).toLocaleString('en-IN')}`);
     }
 
     renderCharts(c) {
@@ -184,6 +189,70 @@ class AdminApp {
         } catch (e) { }
     }
 
+    userFilterParams() {
+        const value = id => document.getElementById(id)?.value || 'all';
+        const params = new URLSearchParams({
+            search: value('userSearch'), bookings: value('userBookings'),
+            login_activity: value('userLoginActivity'), booking_status: value('userBookingStatus'),
+            issue_status: value('userIssueStatus'), payment_status: value('userPaymentStatus'),
+            rental_status: value('userRentalStatus'), created_from: value('userCreatedFrom'),
+            created_to: value('userCreatedTo'), booking_from: value('userBookingFrom'),
+            booking_to: value('userBookingTo'), sort: value('userSort')
+        });
+        return params;
+    }
+
+    bindUserFilters() {
+        ['userSearch', 'userBookings', 'userLoginActivity', 'userBookingStatus', 'userIssueStatus', 'userPaymentStatus', 'userRentalStatus', 'userCreatedFrom', 'userCreatedTo', 'userBookingFrom', 'userBookingTo', 'userSort']
+            .forEach(id => document.getElementById(id)?.addEventListener('input', () => this.loadUsers()));
+    }
+
+    resetUserFilters() {
+        ['userSearch', 'userCreatedFrom', 'userCreatedTo', 'userBookingFrom', 'userBookingTo'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        ['userBookings', 'userLoginActivity', 'userBookingStatus', 'userIssueStatus', 'userPaymentStatus', 'userRentalStatus'].forEach(id => { const el = document.getElementById(id); if (el) el.value = 'all'; });
+        const sort = document.getElementById('userSort');
+        if (sort) sort.value = 'created_desc';
+        this.loadUsers();
+    }
+
+    async loadUsers() {
+        try {
+            const res = await fetch(`/api/admin/users?${this.userFilterParams()}`);
+            const users = await res.json();
+            const tbody = document.getElementById('tbUsers');
+            if (!tbody) return;
+            if (!users.length) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);">No users match these filters.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                  <td><button class="btn-reset-sb" style="padding:4px 8px;font-weight:800;" onclick="adminApp.openUserDetail(${u.id})">${this.escape(u.user_id)}</button></td>
+                  <td><strong>${this.escape(u.name)}</strong></td><td>${this.escape(u.email || '—')}</td><td>${this.escape(u.phone || '—')}</td>
+                  <td>${this.formatDate(u.created_at)}</td><td>${u.bookings}</td><td>${u.total_logins}</td><td>${this.formatDate(u.last_login)}</td>
+                  <td><span class="badge badge-${u.issue_status.toLowerCase().replace(/\s+/g, '-')}" >${this.escape(u.issue_status)}</span></td>
+                </tr>`).join('');
+        } catch (e) { }
+    }
+
+    async openUserDetail(id) {
+        const modal = document.getElementById('userDetailModal');
+        try {
+            const data = await (await fetch(`/api/admin/users/${id}/history`)).json();
+            const u = data.user;
+            document.getElementById('userDetailTitle').innerHTML = `<i class="fas fa-user-clock" style="color:var(--sky-400);margin-right:8px;"></i>${this.escape(u.user_id)} · ${this.escape(u.name)}`;
+            document.getElementById('userDetailSummary').textContent = `${u.email || u.phone || 'No contact'} · Account created ${this.formatDate(u.created_at)}`;
+            document.getElementById('userLogins').innerHTML = data.login_history.length ? data.login_history.map(l => `<tr><td>${this.formatDate(l.logged_in_at)}</td><td>${this.escape(l.ip_address)}</td><td>${this.escape(l.user_agent)}</td></tr>`).join('') : '<tr><td colspan="3">No login history</td></tr>';
+            document.getElementById('userRentals').innerHTML = data.rental_history.length ? data.rental_history.map(r => `<tr><td>${this.escape(r.vehicle)}<br><small>${this.escape(r.vehicle_number)}</small></td><td>${this.formatDate(r.booking_time)}<br>${this.formatDate(r.pickup_time)} → ${this.formatDate(r.return_time)}<br><small>${r.start_date} → ${r.end_date}</small></td><td>${r.rental_days}</td><td>₹${Number(r.payment || 0).toLocaleString('en-IN')}<br><small>${this.escape(r.payment_status)}</small></td><td>${this.escape(r.booking_status)}</td><td>${this.escape(r.rental_status)}</td><td>${this.escape(r.cancellation_reason || '—')}<br><small>Fee: ₹${Number(r.cancellation_fee || 0).toFixed(2)} · Refund: ₹${Number(r.refund_amount || 0).toFixed(2)} (${this.escape(r.refund_status || 'N/A')})</small></td></tr>`).join('') : '<tr><td colspan="7">No rental history</td></tr>';
+            document.getElementById('userIssues').innerHTML = data.issues.length ? data.issues.map(i => `<tr><td>${this.escape(i.description)}</td><td>${this.formatDate(i.created_at)}</td><td>${this.escape(i.status)}</td><td>${this.escape(i.admin_response || '—')}</td></tr>`).join('') : '<tr><td colspan="4">No issues recorded</td></tr>';
+            modal.classList.add('open');
+        } catch (e) { window.showToast('Failed to load user history', 'error'); }
+    }
+
+    closeUserDetail() { document.getElementById('userDetailModal')?.classList.remove('open'); }
+    formatDate(value) { return value ? new Date(value).toLocaleString() : '—'; }
+    escape(value) { return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char])); }
+
     async updateVehicleStatus(id, status) {
         try {
             const res = await fetch(`/api/admin/vehicles/${id}/status`, {
@@ -270,6 +339,7 @@ class AdminApp {
             this.addFeed('fa-calendar-check', '52, 211, 153', `New Booking - ${d.vehicle_name}`, `by ${d.customer_name}`);
             this.loadOverview();
             this.loadBookings();
+            this.loadUsers();
         });
         this.socket.on('booking_confirmed', (d) => {
             this.loadOverview();
@@ -288,6 +358,9 @@ class AdminApp {
         });
         this.socket.on('user_registered', (d) => {
             this.addFeed('fa-user-plus', '14, 165, 233', 'New Registration', d.email);
+            this.loadUsers();
+        });
+        this.socket.on('user_logged_in', (d) => {
             this.loadUsers();
         });
         this.socket.on('vehicle_status_update', (d) => {
